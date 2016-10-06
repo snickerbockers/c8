@@ -35,10 +35,22 @@
 #
 ################################################################################
 
-all: c8asm
+all: c8asm c8
+
+HEADERS=screen.h BaseException.h
+LDFLAGS=-lSDL2
+CFLAGS=-g
 
 c8asm: c8asm.o
 	g++ -o c8asm $<
 
-%.o: %.cpp
-	g++ -c $<
+c8: main.o screen.o
+	g++ -o c8 $+ $(LDFLAGS)
+
+%.o: %.cpp $(HEADERS)
+	g++ -c $< $(CFLAGS)
+
+clean:
+	for file in $(ls *.o) ; do rm $file ; done
+	if test -f c8 ; then rm c8 ; fi
+	if test -f c8asm ; then rm c8asm ; fi
