@@ -35,24 +35,48 @@
  *
  ******************************************************************************/
 
-#include <iostream>
-#include <exception>
+#include <cstring>
 
-#include "Chip8.h"
+#include "BaseException.h"
 
-int main(int argc, char **argv) {
-    SDL_Init(SDL_INIT_VIDEO);
+#include "Memory.h"
 
-    Chip8 c8;
+Memory::Memory() {
+    mem = new uint8_t[MEM_SZ];
+    memset(mem, 0, sizeof(uint8_t) * MEM_SZ);
+}
 
-    try {
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
-    }
+Memory::~Memory() {
+    delete[] mem;
+}
 
-    SDL_Quit();
+uint8_t Memory::read8(unsigned idx) {
+    if (idx >= MEM_SZ)
+        throw MemBoundsError(idx);
+    return mem[idx];
+}
 
-    return 0;
+void Memory::write8(unsigned idx, uint8_t val) {
+    if (idx >= MEM_SZ)
+        throw MemBoundsError(idx);
+    mem[idx] = val;
+}
+
+uint16_t Memory::read16(unsigned idx) {
+    if (idx >= MEM_SZ)
+        throw MemBoundsError(idx);
+    if (idx & 1)
+        throw MemAlignError(idx);
+
+    return (mem[idx] << 8) | mem[idx + 1];
+}
+
+void Memory::write16(unsigned idx, uint16_t val) {
+    if (idx >= MEM_SZ)
+        throw MemBoundsError(idx);
+    if (idx & 1)
+        throw MemAlignError(idx);
+
+    mem[idx] = (val & 0xff00) >> 8;
+    mem[idx + 1] = val & 0xff;
 }

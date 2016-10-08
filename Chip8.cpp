@@ -35,24 +35,27 @@
  *
  ******************************************************************************/
 
-#include <iostream>
-#include <exception>
-
 #include "Chip8.h"
 
-int main(int argc, char **argv) {
-    SDL_Init(SDL_INIT_VIDEO);
+Chip8::Chip8() {
+    screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
+    screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
-    Chip8 c8;
+    screen.clear();
+}
 
-    try {
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
+void Chip8::main_loop() {
+    SDL_Event event;
+    int is_running = 1;
+
+    while (is_running) {
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT)
+                is_running = 0;
+        }
+
+        screen.set_pixel(0, 0, 1);
+        screen.set_pixel(1, 1, 1);
+        screen.flip();
     }
-
-    SDL_Quit();
-
-    return 0;
 }

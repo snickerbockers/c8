@@ -35,24 +35,19 @@
  *
  ******************************************************************************/
 
-#include <iostream>
-#include <exception>
+#include <stdint.h>
 
-#include "Chip8.h"
+class Memory {
+public:
+    const static unsigned MEM_SZ = 0x1000;
 
-int main(int argc, char **argv) {
-    SDL_Init(SDL_INIT_VIDEO);
+    Memory();
+    ~Memory();
 
-    Chip8 c8;
-
-    try {
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
-    }
-
-    SDL_Quit();
-
-    return 0;
-}
+    uint8_t read8(unsigned idx);
+    void write8(unsigned idx, uint8_t val);
+    uint16_t read16(unsigned idx);
+    void write16(unsigned idx, uint16_t val);
+private:
+    uint8_t *mem;
+};

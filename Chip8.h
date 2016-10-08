@@ -35,24 +35,15 @@
  *
  ******************************************************************************/
 
-#include <iostream>
-#include <exception>
+#include "Memory.h"
+#include "Screen.h"
 
-#include "Chip8.h"
+class Chip8 {
+public:
+    Chip8();
 
-int main(int argc, char **argv) {
-    SDL_Init(SDL_INIT_VIDEO);
-
-    Chip8 c8;
-
-    try {
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
-    }
-
-    SDL_Quit();
-
-    return 0;
-}
+    void main_loop();
+private:
+    Memory mem;
+    Screen screen;
+};

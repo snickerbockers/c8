@@ -38,15 +38,44 @@
 #include <string>
 #include <exception>
 
-class BaseError : std::exception {
+class InitError : std::exception {
 public:
-    BaseError(char const *desc) {
+    InitError(char const *desc) {
         this->desc = desc;
     }
 
-    virtual const char* what() {
+    char const *what() {
         return desc;
     }
 private:
     char const *desc;
+};
+
+class MemBoundsError : std::exception {
+public:
+    MemBoundsError(unsigned addr) {
+        this->addr = addr;
+    }
+
+    char const* what() {
+        // TODO: IDK how to put the addr in the what() output without
+        //       making an allocation that may throw another exception
+        return "Memory access error (bad address)";
+    }
+private:
+    unsigned addr;
+};
+
+class MemAlignError : std::exception {
+public:
+    MemAlignError(unsigned addr) {
+        this->addr = addr;
+    }
+    char const* what() {
+        // TODO: IDK how to put the addr in the what() output without
+        //       making an allocation that may throw another exception
+        return "Memory access error (unaligned 16-bit read or write)";
+    }
+private:
+    unsigned addr;
 };

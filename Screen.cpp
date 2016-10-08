@@ -41,13 +41,11 @@
 #include "Screen.h"
 
 Screen::Screen() {
-    SDL_Init(SDL_INIT_VIDEO);
-
     SDL_CreateWindowAndRenderer(WIDTH * 10, HEIGHT * 10, 0, &win, &ren);
     screen_tex = SDL_CreateTexture(ren, SDL_PIXELFORMAT_ARGB8888,
                                    SDL_TEXTUREACCESS_STREAMING, WIDTH, HEIGHT);
     if (!screen_tex)
-        throw BaseError("Failed to init SDL");
+        throw InitError("Failed to init SDL");
 
     memset(frame_buffer, 0, sizeof(frame_buffer));
 
