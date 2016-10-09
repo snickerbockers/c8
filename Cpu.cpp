@@ -629,8 +629,7 @@ void Cpu::inst_ld_i_hex(unsigned reg_no) {
         throw InvalidRegisterError();
     }
 
-    // TODO: implement the hex sprites
-    reg_i = 0;
+    reg_i = Memory::HEX_SPRITE_START + v[reg_no] * 5;
 
     pc += 2;
 }
