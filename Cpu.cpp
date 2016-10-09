@@ -43,16 +43,18 @@
 
 #include "Cpu.h"
 
-Cpu::Cpu(Memory *mem, Screen *screen) {
+Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd) {
     memset(v, 0, sizeof(v));
     memset(stack, 0, sizeof(stack));
     tim = snd = 0;
     sp = 0;
     pc = ROM_START_ADDR;
     reg_i = 0;
+    key_irq_active = false;
 
     this->mem = mem;
     this->screen = screen;
+    this->kbd = kbd;
 }
 
 void Cpu::int_tim(void) {
@@ -60,6 +62,13 @@ void Cpu::int_tim(void) {
         tim--;
     if (snd)
         snd--;
+}
+
+void Cpu::int_key(int which_key) {
+    if (key_irq_active) {
+        key_irq = true;
+        key_irq_which = which_key;
+    }
 }
 
 void Cpu::next_inst(void) {
@@ -567,26 +576,38 @@ void Cpu::inst_drw(unsigned reg1, unsigned reg2, unsigned n_bytes) {
 
 // SKP - skip if the given key is pressed
 void Cpu::inst_skp_key(unsigned reg_no) {
+    int key;
+
     if (reg_no >= REG_COUNT) {
         // this should be impossible because the registers are read from 4-bit
         // values, but I check anyways.
         throw InvalidRegisterError();
     }
 
-    // TODO: IMPLEMENT THIS
-    pc += 2;
+    key = v[reg_no];
+
+    if (kbd->get_key_state(key))
+        pc += 4;
+    else
+        pc += 2;
 }
 
 // SKNP - skip if the given key is not pressed
 void Cpu::inst_sknp_key(unsigned reg_no) {
+    int key;
+
     if (reg_no >= REG_COUNT) {
         // this should be impossible because the registers are read from 4-bit
         // values, but I check anyways.
         throw InvalidRegisterError();
     }
 
-    // TODO: IMPLEMENT THIS
-    pc += 2;
+    key = v[reg_no];
+
+    if (!kbd->get_key_state(key))
+        pc += 4;
+    else
+        pc += 2;
 }
 
 // LD - load value from timer register
@@ -610,10 +631,13 @@ void Cpu::inst_ld_key(unsigned reg_no) {
         throw InvalidRegisterError();
     }
 
-    // TODO: implement input layer
-    v[reg_no] = 0;
-
-    pc += 2;
+    if (key_irq_active && key_irq) {
+        key_irq_active = key_irq = false;
+        v[reg_no] = key_irq_which;
+        pc += 2;
+    } else {
+        key_irq_active = true;
+    }
 }
 
 // LD - load general-purpose register into tim

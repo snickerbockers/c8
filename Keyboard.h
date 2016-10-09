@@ -35,42 +35,32 @@
  *
  ******************************************************************************/
 
-#ifndef CHIP8_H_
-#define CHIP8_H_
+#ifndef KEYBOARD_H_
+#define KEYBOARD_H_
 
-#include "Cpu.h"
-#include "Chip8.h"
-#include "Memory.h"
-#include "Screen.h"
-#include "Keyboard.h"
+#include <SDL2/SDL.h>
 
-class Chip8 {
+class Chip8;
+
+// input layer
+class Keyboard {
 public:
-    const static int DEFAULT_FREQ = 1760000; // 1.76MHz
+    const static int N_KEYS = 16;
 
-    Chip8();
+    Keyboard(Chip8 *c8);
+    ~Keyboard();
 
-    void main_loop();
+    void bind_key(int key, SDL_Scancode bind);
 
-    void next_cycle();
+    bool get_key_state(int key) const;
 
-    // lame hack which passes the buck to Cpu's version of int_key
-    void int_key(int which_key);
+    void handle_key_event(SDL_KeyboardEvent const *event);
 
-    void load_rom(char const *path);
 private:
-    Cpu cpu;
-    Memory mem;
-    Screen screen;
-    Keyboard kbd;
+    SDL_Scancode binds[N_KEYS];
+    bool *key_states;
 
-    unsigned freq;
-
-    /*
-     * The number of cycles since the last timer interrupt was sent to the CPU.
-     * When this is >= freq / 60.0 cycles, there will be a timer interrupt.
-     */
-    unsigned cycles_since_tim;
+    Chip8 *c8;
 };
 
 #endif

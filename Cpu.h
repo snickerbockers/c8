@@ -42,6 +42,7 @@
 
 #include "Memory.h"
 #include "Screen.h"
+#include "Keyboard.h"
 
 class Cpu {
 public:
@@ -49,13 +50,16 @@ public:
     static const int REG_COUNT = 16;
     static const int STACK_SZ = 16;
 
-    Cpu(Memory *mem, Screen *screen);
+    Cpu(Memory *mem, Screen *screen, Keyboard *kbd);
 
     /*
      * Timer interrupts.  These don't go to the software, but they do signal to
      * the CPU to decrement tim and snd.
      */
     void int_tim(void);
+
+    // Key interrupt.  Called whenever a key is pressed for inst_ld_key's sake.
+    void int_key(int which_key);
 
     void next_inst(void);
 
@@ -64,12 +68,18 @@ private:
 
     Memory *mem;
     Screen *screen;
+    Keyboard *kbd;
+
     uint8_t v[REG_COUNT];     // general-purpose registers
     uint16_t reg_i;           // the address register
     uint8_t tim, snd;         // timer and sound registers
     unsigned pc;              // program counter
     uint16_t stack[STACK_SZ]; // the stack
     unsigned sp;              // stack pointer
+
+    bool key_irq_active;
+    bool key_irq;
+    int key_irq_which;
 
     static unsigned get_nibble_from_inst(inst_t inst, unsigned idx);
     static unsigned get_addr_from_inst(inst_t inst);

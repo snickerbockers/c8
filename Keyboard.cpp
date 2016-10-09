@@ -35,42 +35,69 @@
  *
  ******************************************************************************/
 
-#ifndef CHIP8_H_
-#define CHIP8_H_
+#include <SDL2/SDL.h>
 
-#include "Cpu.h"
+#include <cstring>
+
+#include "BaseException.h"
 #include "Chip8.h"
-#include "Memory.h"
-#include "Screen.h"
+
 #include "Keyboard.h"
 
-class Chip8 {
-public:
-    const static int DEFAULT_FREQ = 1760000; // 1.76MHz
+Keyboard::Keyboard(Chip8 *c8) {
+    this->c8 = c8;
 
-    Chip8();
+    key_states = new bool[SDL_NUM_SCANCODES];
+    memset(key_states, 0, sizeof(bool) * SDL_NUM_SCANCODES);
 
-    void main_loop();
+    bind_key(0, SDL_SCANCODE_0);
+    bind_key(1, SDL_SCANCODE_1);
+    bind_key(2, SDL_SCANCODE_2);
+    bind_key(3, SDL_SCANCODE_3);
+    bind_key(4, SDL_SCANCODE_4);
+    bind_key(5, SDL_SCANCODE_5);
+    bind_key(6, SDL_SCANCODE_6);
+    bind_key(7, SDL_SCANCODE_7);
+    bind_key(8, SDL_SCANCODE_8);
+    bind_key(9, SDL_SCANCODE_9);
+    bind_key(10, SDL_SCANCODE_A);
+    bind_key(11, SDL_SCANCODE_B);
+    bind_key(12, SDL_SCANCODE_C);
+    bind_key(13, SDL_SCANCODE_D);
+    bind_key(14, SDL_SCANCODE_E);
+    bind_key(15, SDL_SCANCODE_F);
+}
 
-    void next_cycle();
+Keyboard::~Keyboard() {
+    delete[] key_states;
+}
 
-    // lame hack which passes the buck to Cpu's version of int_key
-    void int_key(int which_key);
+void Keyboard::bind_key(int key, SDL_Scancode bind) {
+    if (key < 0 || key >= N_KEYS) {
+        throw InvalidParamError("invalid key index");
+    }
 
-    void load_rom(char const *path);
-private:
-    Cpu cpu;
-    Memory mem;
-    Screen screen;
-    Keyboard kbd;
+    binds[key] = bind;
+}
 
-    unsigned freq;
+bool Keyboard::get_key_state(int key) const {
+    if (key < 0 || key >= N_KEYS) {
+        throw InvalidParamError("invalid key index");
+    }
 
-    /*
-     * The number of cycles since the last timer interrupt was sent to the CPU.
-     * When this is >= freq / 60.0 cycles, there will be a timer interrupt.
-     */
-    unsigned cycles_since_tim;
-};
+    return key_states[binds[key]];
+}
 
-#endif
+void Keyboard::handle_key_event(SDL_KeyboardEvent const *event) {
+    SDL_Scancode scancode = event->keysym.scancode;
+
+    if (scancode < 0 || scancode >= SDL_NUM_SCANCODES)
+        throw InvalidParamError("invalid key index"); // should be inpossible
+
+    key_states[scancode] = (event->state == SDL_PRESSED);
+
+    if (event->state)
+        for (int key_no = 0; key_no < N_KEYS; key_no++)
+            if (binds[key_no] == scancode)
+                c8->int_key(key_no);
+}

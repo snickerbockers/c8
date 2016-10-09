@@ -43,7 +43,8 @@
 
 #include "Chip8.h"
 
-Chip8::Chip8() : mem(), screen(), cpu(&mem, &screen), freq(DEFAULT_FREQ) {
+Chip8::Chip8() : mem(), screen(), cpu(&mem, &screen, &kbd),
+                 freq(DEFAULT_FREQ), kbd(this) {
     cycles_since_tim = 0;
 
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
@@ -86,6 +87,8 @@ void Chip8::main_loop() {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
                 is_running = 0;
+            else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+                kbd.handle_key_event(&event.key);
         }
 
         while (cycles_to_exec--)
@@ -108,4 +111,8 @@ void Chip8::load_rom(char const *path)
     SDL_RWclose(fp);
 
     std::cout << bytes_read << " bytes read" << std::endl;
+}
+
+void Chip8::int_key(int which_key) {
+    cpu.int_key(which_key);
 }
