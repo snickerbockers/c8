@@ -36,7 +36,6 @@
  ******************************************************************************/
 
 #include <cstring>
-#include <arpa/inet.h> // for endian functions
 
 #include "BaseException.h"
 
@@ -266,13 +265,13 @@ unsigned Cpu::get_nibble_from_inst(inst_t inst, unsigned idx)
     switch (idx)
     {
     case 0:
-        return ntohs(inst) & 0xf;
+        return inst & 0xf;
     case 1:
-        return (ntohs(inst) & 0xf0) >> 4;
+        return (inst & 0xf0) >> 4;
     case 2:
-        return (ntohs(inst) & 0xf00) >> 8;
+        return (inst & 0xf00) >> 8;
     case 3:
-        return (ntohs(inst) & 0xf000) >> 12;
+        return (inst & 0xf000) >> 12;
     }
 
     throw InvalidParamError("Invalid parameter sent to get_nibble_from_isnt");
