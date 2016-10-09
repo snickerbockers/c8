@@ -37,14 +37,14 @@
 
 all: c8asm c8
 
-HEADERS=Screen.h BaseException.h Memory.h Chip8.h
+HEADERS=Screen.h BaseException.h Memory.h Chip8.h Cpu.h
 LDFLAGS=-lSDL2
 CFLAGS=--std=c++03 -g
 
 c8asm: c8asm.o
 	g++ -o c8asm $<
 
-c8: main.o Screen.o Memory.o Chip8.o
+c8: main.o Screen.o Memory.o Chip8.o Cpu.o
 	g++ -o c8 $+ $(LDFLAGS)
 
 %.o: %.cpp $(HEADERS)

@@ -35,15 +35,27 @@
  *
  ******************************************************************************/
 
+#ifndef CHIP8_H_
+#define CHIP8_H_
+
+#include "Cpu.h"
+#include "Chip8.h"
 #include "Memory.h"
 #include "Screen.h"
 
 class Chip8 {
 public:
+    const static int ROM_START_ADDR = 0x200;
+
     Chip8();
 
     void main_loop();
+
+    void load_rom(char const *path);
 private:
+    Cpu cpu;
     Memory mem;
     Screen screen;
 };
+
+#endif

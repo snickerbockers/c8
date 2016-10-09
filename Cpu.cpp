@@ -35,52 +35,13 @@
  *
  ******************************************************************************/
 
-#ifndef BASEEXCEPTION_H_
-#define BASEEXCEPTION_H_
+#include <cstring>
 
-#include <string>
-#include <exception>
+#include "Cpu.h"
 
-class InitError : std::exception {
-public:
-    InitError(char const *desc) {
-        this->desc = desc;
-    }
+Cpu::Cpu(Memory *mem) {
+    memset(v, 0, sizeof(v));
+    tim = snd = 0;
 
-    char const *what() {
-        return desc;
-    }
-private:
-    char const *desc;
-};
-
-class MemBoundsError : std::exception {
-public:
-    MemBoundsError(unsigned addr) {
-        this->addr = addr;
-    }
-
-    char const* what() {
-        // TODO: IDK how to put the addr in the what() output without
-        //       making an allocation that may throw another exception
-        return "Memory access error (bad address)";
-    }
-private:
-    unsigned addr;
-};
-
-class MemAlignError : std::exception {
-public:
-    MemAlignError(unsigned addr) {
-        this->addr = addr;
-    }
-    char const* what() {
-        // TODO: IDK how to put the addr in the what() output without
-        //       making an allocation that may throw another exception
-        return "Memory access error (unaligned 16-bit read or write)";
-    }
-private:
-    unsigned addr;
-};
-
-#endif
+    this->mem = mem;
+}

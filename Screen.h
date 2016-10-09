@@ -35,6 +35,9 @@
  *
  ******************************************************************************/
 
+#ifndef SCREEN_H_
+#define SCREEN_H_
+
 #include <SDL2/SDL.h>
 
 class Screen {
@@ -77,3 +80,5 @@ private:
     // pixel_colors[0] is background color, pixel_colors[1] is foreground color
     color_t pixel_colors[2];
 };
+
+#endif

@@ -35,52 +35,22 @@
  *
  ******************************************************************************/
 
-#ifndef BASEEXCEPTION_H_
-#define BASEEXCEPTION_H_
+#ifndef CPU_H_
+#define CPU_H_
 
-#include <string>
-#include <exception>
+#include <stdint.h>
 
-class InitError : std::exception {
+#include "Memory.h"
+
+class Cpu {
 public:
-    InitError(char const *desc) {
-        this->desc = desc;
-    }
+    static const int REG_COUNT = 16;
 
-    char const *what() {
-        return desc;
-    }
+    Cpu(Memory *mem);
 private:
-    char const *desc;
-};
-
-class MemBoundsError : std::exception {
-public:
-    MemBoundsError(unsigned addr) {
-        this->addr = addr;
-    }
-
-    char const* what() {
-        // TODO: IDK how to put the addr in the what() output without
-        //       making an allocation that may throw another exception
-        return "Memory access error (bad address)";
-    }
-private:
-    unsigned addr;
-};
-
-class MemAlignError : std::exception {
-public:
-    MemAlignError(unsigned addr) {
-        this->addr = addr;
-    }
-    char const* what() {
-        // TODO: IDK how to put the addr in the what() output without
-        //       making an allocation that may throw another exception
-        return "Memory access error (unaligned 16-bit read or write)";
-    }
-private:
-    unsigned addr;
+    Memory *mem;
+    uint8_t v[REG_COUNT];
+    uint8_t tim, snd; // timer and sound registers
 };
 
 #endif

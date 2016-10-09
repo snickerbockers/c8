@@ -35,9 +35,15 @@
  *
  ******************************************************************************/
 
+#include <stdint.h>
+
+#include <iostream>
+#include <fstream>
+#include <iterator>
+
 #include "Chip8.h"
 
-Chip8::Chip8() {
+Chip8::Chip8() : mem(), cpu(&mem) {
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
@@ -58,4 +64,20 @@ void Chip8::main_loop() {
         screen.set_pixel(1, 1, 1);
         screen.flip();
     }
+}
+
+void Chip8::load_rom(char const *path)
+{
+    unsigned addr = ROM_START_ADDR;
+    unsigned bytes_read = 0;
+
+    SDL_RWops *fp = SDL_RWFromFile(path, "rb");
+    while (bytes_read < SDL_RWsize(fp)) {
+        uint8_t val;
+        mem.write8(addr++, SDL_ReadU8(fp));
+        bytes_read++;
+    }
+    SDL_RWclose(fp);
+
+    std::cout << bytes_read << " bytes read" << std::endl;
 }

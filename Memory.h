@@ -35,6 +35,9 @@
  *
  ******************************************************************************/
 
+#ifndef MEMORY_H_
+#define MEMORY_H_
+
 #include <stdint.h>
 
 class Memory {
@@ -51,3 +54,5 @@ public:
 private:
     uint8_t *mem;
 };
+
+#endif

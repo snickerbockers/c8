@@ -35,6 +35,7 @@
  *
  ******************************************************************************/
 
+#include <unistd.h>
 #include <iostream>
 #include <exception>
 
@@ -43,9 +44,15 @@
 int main(int argc, char **argv) {
     SDL_Init(SDL_INIT_VIDEO);
 
+    if (argc != 2) {
+        std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
+        return 1;
+    }
+
     Chip8 c8;
 
     try {
+        c8.load_rom(argv[1]);
         c8.main_loop();
     } catch (std::exception err) {
         std::cerr << err.what() << std::endl;
