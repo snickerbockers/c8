@@ -62,6 +62,7 @@ public:
     void flip();
 
     void set_pixel(int pixel_x, int pixel_y, int set);
+    int get_pixel(int pixel_x, int pixel_y);
 
     static color_t pack_color(color_t red, color_t green,
                               color_t blue, color_t alpha);

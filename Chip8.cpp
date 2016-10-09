@@ -43,7 +43,7 @@
 
 #include "Chip8.h"
 
-Chip8::Chip8() : mem(), cpu(&mem), freq(DEFAULT_FREQ) {
+Chip8::Chip8() : mem(), screen(), cpu(&mem, &screen), freq(DEFAULT_FREQ) {
     cycles_since_tim = 0;
 
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));

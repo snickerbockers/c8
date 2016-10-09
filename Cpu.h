@@ -41,13 +41,15 @@
 #include <stdint.h>
 
 #include "Memory.h"
+#include "Screen.h"
 
 class Cpu {
 public:
     const static int ROM_START_ADDR = 0x200;
     static const int REG_COUNT = 16;
+    static const int STACK_SZ = 16;
 
-    Cpu(Memory *mem);
+    Cpu(Memory *mem, Screen *screen);
 
     /*
      * Timer interrupts.  These don't go to the software, but they do signal to
@@ -61,11 +63,52 @@ private:
     typedef uint16_t inst_t;
 
     Memory *mem;
-    uint8_t v[REG_COUNT];
-    uint8_t tim, snd; // timer and sound registers
-    unsigned pc;
+    Screen *screen;
+    uint8_t v[REG_COUNT];     // general-purpose registers
+    uint16_t reg_i;           // the address register
+    uint8_t tim, snd;         // timer and sound registers
+    unsigned pc;              // program counter
+    uint16_t stack[STACK_SZ]; // the stack
+    unsigned sp;              // stack pointer
 
     static unsigned get_nibble_from_inst(inst_t inst, unsigned idx);
+    static unsigned get_addr_from_inst(inst_t inst);
+    static unsigned get_low_byte_from_inst(inst_t inst);
+
+    void inst_cls(void);
+    void inst_ret(void);
+    void inst_jp(unsigned where_to);
+    void inst_call(unsigned where_to);
+    void inst_se_reg_val(unsigned reg_no, unsigned val);
+    void inst_sne_reg_val(unsigned reg_no, unsigned val);
+    void inst_se_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_ld_reg_val(unsigned reg_no, unsigned val);
+    void inst_add_reg_val(unsigned reg_no, unsigned val);
+    void inst_ld_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_or_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_and_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_xor_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_add_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_sub_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_shr_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_subn_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_shl_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_sne_reg_reg(unsigned reg1, unsigned reg2);
+    void inst_ld_i(unsigned addr);
+    void inst_jp_offset(unsigned addr);
+    void inst_rnd(unsigned reg_no, unsigned val);
+    void inst_drw(unsigned reg1, unsigned reg2, unsigned n_bytes);
+    void inst_skp_key(unsigned reg_no);
+    void inst_sknp_key(unsigned reg_no);
+    void inst_ld_reg_tim(unsigned reg_no);
+    void inst_ld_key(unsigned reg_no);
+    void inst_ld_tim_reg(unsigned reg_no);
+    void inst_ld_snd_reg(unsigned reg_no);
+    void inst_add_i_reg(unsigned reg_no);
+    void inst_ld_i_hex(unsigned reg_no);
+    void inst_ld_bcd(unsigned reg_no);
+    void inst_ld_push_regs(unsigned reg_no);
+    void inst_ld_pop_regs(unsigned reg_no);
 };
 
 #endif

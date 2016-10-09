@@ -116,4 +116,25 @@ public:
     }
 };
 
+class StackUnderflowError : std::exception {
+public:
+    char const *what() {
+        return "Stack underflow";
+    }
+};
+
+class StackOverflowError : std::exception {
+public:
+    char const *what() {
+        return "Stack overflow";
+    }
+};
+
+class InvalidRegisterError : std::exception {
+public:
+    char const *what() {
+        return "Invalid register";
+    }
+};
+
 #endif
