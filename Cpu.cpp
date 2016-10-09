@@ -42,6 +42,17 @@
 Cpu::Cpu(Memory *mem) {
     memset(v, 0, sizeof(v));
     tim = snd = 0;
+    pc = ROM_START_ADDR;
 
     this->mem = mem;
+}
+
+void Cpu::int_tim(void) {
+    if (tim)
+        tim--;
+    if (snd)
+        snd--;
+}
+
+void Cpu::next_inst(void) {
 }

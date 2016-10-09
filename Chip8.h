@@ -45,17 +45,27 @@
 
 class Chip8 {
 public:
-    const static int ROM_START_ADDR = 0x200;
+    const static int DEFAULT_FREQ = 1760000; // 1.76MHz
 
     Chip8();
 
     void main_loop();
+
+    void next_cycle();
 
     void load_rom(char const *path);
 private:
     Cpu cpu;
     Memory mem;
     Screen screen;
+
+    unsigned freq;
+
+    /*
+     * The number of cycles since the last timer interrupt was sent to the CPU.
+     * When this is >= freq / 60.0 cycles, there will be a timer interrupt.
+     */
+    unsigned cycles_since_tim;
 };
 
 #endif

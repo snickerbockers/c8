@@ -44,13 +44,24 @@
 
 class Cpu {
 public:
+    const static int ROM_START_ADDR = 0x200;
     static const int REG_COUNT = 16;
 
     Cpu(Memory *mem);
+
+    /*
+     * Timer interrupts.  These don't go to the software, but they do signal to
+     * the CPU to decrement tim and snd.
+     */
+    void int_tim(void);
+
+    void next_inst(void);
+
 private:
     Memory *mem;
     uint8_t v[REG_COUNT];
     uint8_t tim, snd; // timer and sound registers
+    unsigned pc;
 };
 
 #endif

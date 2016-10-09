@@ -43,37 +43,65 @@
 
 #include "Chip8.h"
 
-Chip8::Chip8() : mem(), cpu(&mem) {
+Chip8::Chip8() : mem(), cpu(&mem), freq(DEFAULT_FREQ) {
+    cycles_since_tim = 0;
+
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
     screen.clear();
 }
 
+void Chip8::next_cycle() {
+    if (++cycles_since_tim >= (double(freq) / 60.0)) {
+        cpu.int_tim();
+        cycles_since_tim = 0;
+    }
+
+    /*
+     * next_cycle assumes that each instruction takes one cycle to execute;
+     * this probably is not true and may need to be revisted in the future.
+     */
+    cpu.next_inst();
+}
+
 void Chip8::main_loop() {
     SDL_Event event;
     int is_running = 1;
+    unsigned cur_ticks, prev_ticks, delta_ticks;
+    unsigned cycles_to_exec;
+
+    cur_ticks = prev_ticks = SDL_GetTicks();
 
     while (is_running) {
+        /*
+         * TODO: The math here should be revisited since we will lose cycles if
+         *       freq is not evenly divisible by 1000.
+         */
+        prev_ticks = cur_ticks;
+        cur_ticks = SDL_GetTicks();
+        delta_ticks = cur_ticks - prev_ticks;
+        cycles_to_exec = delta_ticks * (freq / 1000);
+
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
                 is_running = 0;
         }
 
-        screen.set_pixel(0, 0, 1);
-        screen.set_pixel(1, 1, 1);
+        while (cycles_to_exec--)
+            next_cycle();
+
         screen.flip();
     }
 }
 
 void Chip8::load_rom(char const *path)
 {
-    unsigned addr = ROM_START_ADDR;
+    unsigned addr = Cpu::ROM_START_ADDR;
     unsigned bytes_read = 0;
 
     SDL_RWops *fp = SDL_RWFromFile(path, "rb");
     while (bytes_read < SDL_RWsize(fp)) {
-        uint8_t val;
         mem.write8(addr++, SDL_ReadU8(fp));
         bytes_read++;
     }
