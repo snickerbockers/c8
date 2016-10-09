@@ -83,4 +83,37 @@ private:
     unsigned addr;
 };
 
+class InvalidParamError : std::exception {
+public:
+    InvalidParamError(char const *desc) {
+        this->desc = desc;
+    }
+
+    char const *what() {
+        return desc;
+    }
+private:
+    char const *desc;
+};
+
+class UnimplementedInstructionError : std::exception {
+public:
+    UnimplementedInstructionError(char const *inst_name) {
+        this->inst_name = inst_name;
+    }
+
+    char const *what() {
+        return inst_name;
+    }
+private:
+    char const *inst_name;
+};
+
+class BadOpcodeError : std::exception {
+public:
+    char const *what() {
+        return "Bad opcode";
+    }
+};
+
 #endif

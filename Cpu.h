@@ -58,10 +58,14 @@ public:
     void next_inst(void);
 
 private:
+    typedef uint16_t inst_t;
+
     Memory *mem;
     uint8_t v[REG_COUNT];
     uint8_t tim, snd; // timer and sound registers
     unsigned pc;
+
+    static unsigned get_nibble_from_inst(inst_t inst, unsigned idx);
 };
 
 #endif
