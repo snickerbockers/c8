@@ -63,11 +63,12 @@ void Screen::flip() {
 }
 
 void Screen::set_pixel(int pixel_x, int pixel_y, int set) {
-    frame_buffer[pixel_y * WIDTH + pixel_x] = pixel_colors[set];
+    frame_buffer[(pixel_y % HEIGHT) * WIDTH + (pixel_x % WIDTH)] =
+        pixel_colors[set];
 }
 
 int Screen::get_pixel(int pixel_x, int pixel_y) {
-    return frame_buffer[pixel_y * WIDTH + pixel_x] == pixel_colors[1];
+    return frame_buffer[(pixel_y % HEIGHT) * WIDTH + (pixel_x % WIDTH)] == pixel_colors[1];
 }
 
 Screen::color_t Screen::pack_color(color_t red, color_t green,
