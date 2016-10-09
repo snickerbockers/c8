@@ -560,7 +560,7 @@ void Cpu::inst_drw(unsigned reg1, unsigned reg2, unsigned n_bytes) {
         int src_row = mem->read8(reg_i + row);
         for (unsigned col = 0; col < 8; col++) {
             int orig_pix = screen->get_pixel(col + pix_x, row + pix_y);
-            int src_pix = src_row & (1 << col);
+            int src_pix = src_row & (0x80 >> col);
             int new_pix = orig_pix != src_pix;
             if (!new_pix && orig_pix) {
                 new_vf = 1;
