@@ -35,7 +35,6 @@
  *
  ******************************************************************************/
 
-#include <arpa/inet.h>
 #include <cstring>
 #include <cstdlib>
 
@@ -275,7 +274,7 @@ unsigned Cpu::get_nibble_from_inst(inst_t inst, unsigned idx)
 }
 
 unsigned Cpu::get_addr_from_inst(inst_t inst) {
-    return ntohs(inst & 0xfff);
+    return inst & 0xfff;
 }
 
 unsigned Cpu::get_low_byte_from_inst(inst_t inst) {
