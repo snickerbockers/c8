@@ -75,13 +75,13 @@ unsigned get_nibble_from_inst(inst_t inst, unsigned idx)
     switch (idx)
     {
     case 0:
-        return ntohs(inst) & 0xf;
+        return inst & 0xf;
     case 1:
-        return (ntohs(inst) & 0xf0) >> 4;
+        return (inst & 0xf0) >> 4;
     case 2:
-        return (ntohs(inst) & 0xf00) >> 8;
+        return (inst & 0xf00) >> 8;
     case 3:
-        return (ntohs(inst) & 0xf000) >> 12;
+        return (inst & 0xf000) >> 12;
     }
 
     // TODO: use a real exception class
@@ -100,13 +100,14 @@ std::string decode_instruction(inst_t inst)
     if (nibbles[3] == 0) {
         if (nibbles[2] == 0) {
             if (nibbles[1] == 0xE) {
-                if (nibbles[0] == 0)
+                if (nibbles[0] == 0) {
                     return std::string("CLS"); // 00E0
-                else if (nibbles[0] == 0xE)
+                } else if (nibbles[0] == 0xE) {
                     return std::string("RET"); // 00EE
+                }
             }
         }
-        // 0NNN
+        // 0NNN - this will never be implemented
         return std::string("SYS ") + nibble_to_hex(nibbles[2]) +
             nibble_to_hex(nibbles[1]) + nibble_to_hex(nibbles[0]);
     } else if (nibbles[3] == 1) {
@@ -131,8 +132,7 @@ std::string decode_instruction(inst_t inst)
             return std::string("SE V") + nibble_to_hex(nibbles[2]) + ", V" +
                                nibble_to_hex(nibbles[1]);
         } else {
-            std::cerr << "Invalid opcode " << inst << std::endl;
-            return std::string();
+            return "";
         }
     } else if (nibbles[3] == 6) {
         // 6xkk
@@ -179,7 +179,7 @@ std::string decode_instruction(inst_t inst)
             return std::string("SHL V") + nibble_to_hex(nibbles[2]);
         }
 
-        throw std::string("wtf");
+        return "";
     } else if (nibbles[3] == 9) {
         // 9xy0
         if (nibbles[0] == 0) {
@@ -187,7 +187,7 @@ std::string decode_instruction(inst_t inst)
                 nibble_to_hex(nibbles[1]);
         }
 
-        throw std::string("wtf");
+        return "";
     } else if (nibbles[3] == 0xa) {
         // Annn
         return std::string("LD I, ") + nibble_to_hex(nibbles[2]) +
@@ -212,7 +212,7 @@ std::string decode_instruction(inst_t inst)
             // EXA1
             return std::string("SKNP V") + nibble_to_hex(nibbles[2]);
         }
-        throw std::string("wtf");
+        return "";
     } else if (nibbles[3] == 0xf) {
         if (nibbles[1] == 0x0 && nibbles[0] == 0x7) {
             // Fx07
@@ -243,19 +243,23 @@ std::string decode_instruction(inst_t inst)
             return std::string("LD V") + nibble_to_hex(nibbles[2]) + ", [I]";
         }
 
-        throw std::string("wtf");
+        return "";
     }
 
-    throw std::string("super wtf");
+    return "";
 }
 
 void read_instruction(std::fstream *stream)
 {
     inst_t inst;
     static unsigned offset = 0x200;
+    uint8_t inst_hi, inst_lo;
 
-    stream->read((char*)&inst, sizeof(inst));
-    std::cout << offset << ": " << decode_instruction(inst) << std::endl;
+    stream->read((char*)&inst_hi, sizeof(inst_hi));
+    stream->read((char*)&inst_lo, sizeof(inst_lo));
+    inst = unsigned(inst_hi) << 8 | inst_lo;
+    std::cout << std::hex << offset << ": " << decode_instruction(inst) << "\t;; " <<
+        std::hex << unsigned(inst) << std::endl;
     offset += 2;
 }
 
