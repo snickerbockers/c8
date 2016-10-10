@@ -61,7 +61,14 @@ public:
     // Key interrupt.  Called whenever a key is pressed for inst_ld_key's sake.
     void int_key(int which_key);
 
-    void next_inst(void);
+    // returns true if we hit the breakpoint
+    bool next_inst(void);
+
+    // set to < 0 to disable
+    void set_breakpoint(int bp);
+    int get_breakpoint() const;
+
+    unsigned get_pc() const;
 
 private:
     typedef uint16_t inst_t;
@@ -76,6 +83,8 @@ private:
     unsigned pc;              // program counter
     uint16_t stack[STACK_SZ]; // the stack
     unsigned sp;              // stack pointer
+
+    int breakpoint;           // if >= 0, this pauses execution for debugging
 
     bool key_irq_active;
     bool key_irq;

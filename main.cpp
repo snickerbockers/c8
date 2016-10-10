@@ -38,13 +38,27 @@
 #include <unistd.h>
 #include <iostream>
 #include <exception>
+#include <cstdlib>
 
 #include "Chip8.h"
 
 int main(int argc, char **argv) {
+    char optchar;
+    int bp = -1;
+    while ((optchar = getopt(argc, argv, "b:")) != -1) {
+        if (optchar == 'b') {
+            bp = atoi(optarg);
+        } else {
+            std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
+            return 1;
+        }
+    }
+    argc -= optind;
+    argv += optind;
+
     SDL_Init(SDL_INIT_VIDEO);
 
-    if (argc != 2) {
+    if (argc != 1) {
         std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
         return 1;
     }
@@ -52,7 +66,8 @@ int main(int argc, char **argv) {
     Chip8 c8;
 
     try {
-        c8.load_rom(argv[1]);
+        c8.load_rom(argv[0]);
+        c8.set_breakpoint(bp);
         c8.main_loop();
     } catch (std::exception err) {
         std::cerr << err.what() << std::endl;

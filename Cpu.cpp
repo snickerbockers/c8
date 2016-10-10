@@ -37,6 +37,7 @@
 
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
 
 #include "BaseException.h"
 
@@ -54,6 +55,8 @@ Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd) {
     this->mem = mem;
     this->screen = screen;
     this->kbd = kbd;
+
+    set_breakpoint(-1);
 }
 
 void Cpu::int_tim(void) {
@@ -70,8 +73,23 @@ void Cpu::int_key(int which_key) {
     }
 }
 
-void Cpu::next_inst(void) {
+void Cpu::set_breakpoint(int bp) {
+    this->breakpoint = bp;
+}
+
+int Cpu::get_breakpoint() const {
+    return breakpoint;
+}
+
+unsigned Cpu::get_pc() const {
+    return pc;
+}
+
+bool Cpu::next_inst(void) {
     inst_t inst;
+
+    if (pc == breakpoint)
+        return true;
 
     inst = mem->read16(pc);
     int nibbles[] = {
@@ -87,11 +105,11 @@ void Cpu::next_inst(void) {
                 if (nibbles[0] == 0) {
                     //00E0
                     inst_cls();
-                    return;
+                    goto on_ret;
                 } else if (nibbles[0] == 0xE) {
                     //00EE
                     inst_ret();
-                    return;
+                    goto on_ret;
                 }
             }
         }
@@ -100,72 +118,72 @@ void Cpu::next_inst(void) {
     } else if (nibbles[3] == 1) {
         // 1NNN
         inst_jp(get_addr_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 2) {
         // 2NNN
         inst_call(get_addr_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 3) {
         // 3xkk
         inst_se_reg_val(nibbles[2], get_low_byte_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 4) {
         // 4xkk
         inst_sne_reg_val(nibbles[2], get_low_byte_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 5) {
         if (nibbles[0] == 0) {
             // 5xy0
             inst_se_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else {
             throw BadOpcodeError();
         }
     } else if (nibbles[3] == 6) {
         // 6xkk
         inst_ld_reg_val(nibbles[2], get_low_byte_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 7) {
         // 7xkk
         inst_add_reg_val(nibbles[2], get_low_byte_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 8) {
         if (nibbles[0] == 0) {
             // 8xy0
             inst_ld_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 1) {
             // 8xy1
             inst_or_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 2) {
             // 8xy2
             inst_and_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 3) {
             // 8xy3
             inst_xor_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 4) {
             // 8xy4
             inst_add_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 5) {
             // 8xy5
             inst_sub_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 6) {
             // 8xy6
             inst_shr_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 7) {
             // 8xy7
             inst_subn_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         } else if (nibbles[0] == 0xe) {
             // 8xye
             inst_shl_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         }
 
         throw BadOpcodeError();
@@ -173,80 +191,83 @@ void Cpu::next_inst(void) {
         // 9xy0
         if (nibbles[0] == 0) {
             inst_sne_reg_reg(nibbles[2], nibbles[1]);
-            return;
+            goto on_ret;
         }
 
         throw BadOpcodeError();
     } else if (nibbles[3] == 0xa) {
         // Annn
         inst_ld_i(get_addr_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 0xb) {
         // Bnnn
         inst_jp_offset(get_addr_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 0xc) {
         // Cxkk
         inst_rnd(nibbles[2], get_low_byte_from_inst(inst));
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 0xd) {
         // Dxyn
         inst_drw(nibbles[2], nibbles[1], nibbles[0]);
-        return;
+        goto on_ret;
     } else if (nibbles[3] == 0xe) {
         if (nibbles[1] == 0x9 && nibbles[0] == 0xe) {
             // Ex9E
             inst_skp_key(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] = 0xA && nibbles[0] == 0x1) {
             // EXA1
             inst_sknp_key(nibbles[2]);
-            return;
+            goto on_ret;
         }
         throw BadOpcodeError();
     } else if (nibbles[3] == 0xf) {
         if (nibbles[1] == 0x0 && nibbles[0] == 0x7) {
             // Fx07
             inst_ld_reg_tim(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x0 && nibbles[0] == 0xa) {
             // Fx0A
             inst_ld_key(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x1 && nibbles[0] == 0x5) {
             // Fx15
             inst_ld_tim_reg(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x1 && nibbles[0] == 0x8) {
             // Fx18
             inst_ld_snd_reg(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x1 && nibbles[0] == 0xe) {
             // Fx1E
             inst_add_i_reg(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x2 && nibbles[0] == 0x9) {
             // Fx29
             inst_ld_i_hex(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x3 && nibbles[0] == 0x3) {
             // Fx33
             inst_ld_bcd(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x5 && nibbles[0] == 0x5) {
             // Fx55
             inst_ld_push_regs(nibbles[2]);
-            return;
+            goto on_ret;
         } else if (nibbles[1] == 0x6 && nibbles[0] == 0x5) {
             // Fx65
             inst_ld_pop_regs(nibbles[2]);
-            return;
+            goto on_ret;
         }
 
         throw BadOpcodeError();
     }
 
     throw BadOpcodeError();
+
+on_ret:
+    return false;
 }
 
 unsigned Cpu::get_nibble_from_inst(inst_t inst, unsigned idx)

@@ -58,6 +58,8 @@ public:
     void int_key(int which_key);
 
     void load_rom(char const *path);
+
+    void set_breakpoint(int bp);
 private:
     Cpu cpu;
     Memory mem;
@@ -65,12 +67,6 @@ private:
     Keyboard kbd;
 
     unsigned freq;
-
-    /*
-     * The number of cycles since the last timer interrupt was sent to the CPU.
-     * When this is >= freq / 60.0 cycles, there will be a timer interrupt.
-     */
-    unsigned cycles_since_tim;
 };
 
 #endif

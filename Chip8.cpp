@@ -45,25 +45,10 @@
 
 Chip8::Chip8() : mem(), screen(), cpu(&mem, &screen, &kbd),
                  freq(DEFAULT_FREQ), kbd(this) {
-    cycles_since_tim = 0;
-
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
     screen.clear();
-}
-
-void Chip8::next_cycle() {
-    if (++cycles_since_tim >= (double(freq) / 60.0)) {
-        cpu.int_tim();
-        cycles_since_tim = 0;
-    }
-
-    /*
-     * next_cycle assumes that each instruction takes one cycle to execute;
-     * this probably is not true and may need to be revisted in the future.
-     */
-    cpu.next_inst();
 }
 
 void Chip8::main_loop() {
@@ -71,8 +56,10 @@ void Chip8::main_loop() {
     int is_running = 1;
     unsigned cur_ticks, prev_ticks, delta_ticks;
     unsigned cycles_to_exec;
+    unsigned last_int_tim_ticks;
+    bool db_prompt;
 
-    cur_ticks = prev_ticks = SDL_GetTicks();
+    last_int_tim_ticks = cur_ticks = prev_ticks = SDL_GetTicks();
 
     while (is_running) {
         /*
@@ -83,6 +70,12 @@ void Chip8::main_loop() {
         cur_ticks = SDL_GetTicks();
         delta_ticks = cur_ticks - prev_ticks;
         cycles_to_exec = delta_ticks * (freq / 1000);
+        cycles_to_exec = 1;
+
+        if ((cur_ticks - last_int_tim_ticks) >= (1000.0 / 60.0)) {
+            last_int_tim_ticks = cur_ticks;
+            cpu.int_tim();
+        }
 
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT)
@@ -91,8 +84,22 @@ void Chip8::main_loop() {
                 kbd.handle_key_event(&event.key);
         }
 
-        while (cycles_to_exec--)
-            next_cycle();
+        while (cycles_to_exec--) {
+            if (cpu.next_inst()) {
+                char choice;
+                do {
+                    cpu.set_breakpoint(-1);
+
+                    std::cout << std::hex << cpu.get_pc() << std::endl;
+                    std::cout << "db> ";
+
+                    std::cin >> choice;
+
+                    if (choice == 'n')
+                        cpu.next_inst();
+                } while (choice != 'c');
+            }
+        }
 
         screen.flip();
     }
@@ -115,4 +122,8 @@ void Chip8::load_rom(char const *path)
 
 void Chip8::int_key(int which_key) {
     cpu.int_key(which_key);
+}
+
+void Chip8::set_breakpoint(int bp) {
+    cpu.set_breakpoint(bp);
 }
