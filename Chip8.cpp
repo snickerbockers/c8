@@ -102,6 +102,9 @@ void Chip8::main_loop() {
         }
 
         screen.flip();
+
+        // STUPID HACK - WE GOTTA FIX THE TIMING FOLKS
+        SDL_Delay(1);
     }
 }
 
