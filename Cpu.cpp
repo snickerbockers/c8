@@ -332,7 +332,7 @@ void Cpu::inst_call(unsigned where_to) {
      * but I do believe this is how it is supposed to behave based on what I've
      * read at Cowgod's site
      */
-    stack[++sp] = pc;
+    stack[++sp] = pc + 2;
     pc = where_to;
 }
 
