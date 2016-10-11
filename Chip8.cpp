@@ -45,7 +45,9 @@
 
 Chip8::Chip8(bool allow_unaligned) : mem(allow_unaligned), screen(),
                                      cpu(&mem, &screen, &kbd),
-                                     freq(DEFAULT_FREQ), kbd(this) {
+                                     kbd(this) {
+    freq = DEFAULT_FREQ;
+
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
@@ -58,7 +60,6 @@ void Chip8::main_loop() {
     unsigned cur_ticks, prev_ticks, delta_ticks;
     unsigned cycles_to_exec;
     unsigned last_int_tim_ticks;
-    bool db_prompt;
 
     last_int_tim_ticks = cur_ticks = prev_ticks = SDL_GetTicks();
 

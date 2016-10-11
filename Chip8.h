@@ -61,9 +61,9 @@ public:
 
     void set_breakpoint(int bp);
 private:
-    Cpu cpu;
     Memory mem;
     Screen screen;
+    Cpu cpu;
     Keyboard kbd;
 
     unsigned freq;

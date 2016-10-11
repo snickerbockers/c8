@@ -80,7 +80,7 @@ private:
     uint8_t v[REG_COUNT];     // general-purpose registers
     uint16_t reg_i;           // the address register
     uint8_t tim, snd;         // timer and sound registers
-    unsigned pc;              // program counter
+    int pc;                   // program counter
     uint16_t stack[STACK_SZ]; // the stack
     unsigned sp;              // stack pointer
 

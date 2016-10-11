@@ -92,7 +92,7 @@ bool Cpu::next_inst(void) {
         return true;
 
     inst = mem->read16(pc);
-    int nibbles[] = {
+    unsigned nibbles[] = {
         get_nibble_from_inst(inst, 0),
         get_nibble_from_inst(inst, 1),
         get_nibble_from_inst(inst, 2),
@@ -216,7 +216,7 @@ bool Cpu::next_inst(void) {
             // Ex9E
             inst_skp_key(nibbles[2]);
             goto on_ret;
-        } else if (nibbles[1] = 0xA && nibbles[0] == 0x1) {
+        } else if (nibbles[1] == 0xA && nibbles[0] == 0x1) {
             // EXA1
             inst_sknp_key(nibbles[2]);
             goto on_ret;

@@ -90,7 +90,7 @@ unsigned get_nibble_from_inst(inst_t inst, unsigned idx)
 
 std::string decode_instruction(inst_t inst)
 {
-    int nibbles[] = {
+    unsigned nibbles[] = {
         get_nibble_from_inst(inst, 0),
         get_nibble_from_inst(inst, 1),
         get_nibble_from_inst(inst, 2),
@@ -208,7 +208,7 @@ std::string decode_instruction(inst_t inst)
         if (nibbles[1] == 0x9 && nibbles[0] == 0xe) {
             // Ex9E
             return std::string("SKP V") + nibble_to_hex(nibbles[2]);
-        } else if (nibbles[1] = 0xA && nibbles[0] == 0x1) {
+        } else if (nibbles[1] == 0xA && nibbles[0] == 0x1) {
             // EXA1
             return std::string("SKNP V") + nibble_to_hex(nibbles[2]);
         }
