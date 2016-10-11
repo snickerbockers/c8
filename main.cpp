@@ -45,9 +45,13 @@
 int main(int argc, char **argv) {
     char optchar;
     int bp = -1;
-    while ((optchar = getopt(argc, argv, "b:")) != -1) {
+    bool allow_unaligned = false;
+
+    while ((optchar = getopt(argc, argv, "b:u")) != -1) {
         if (optchar == 'b') {
             bp = atoi(optarg);
+        } else if (optchar == 'u') {
+            allow_unaligned = true;
         } else {
             std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
             return 1;
@@ -63,7 +67,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    Chip8 c8;
+    Chip8 c8(allow_unaligned);
 
     try {
         c8.load_rom(argv[0]);

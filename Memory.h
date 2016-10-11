@@ -45,7 +45,7 @@ public:
     const static unsigned MEM_SZ = 0x1000;
     const static int HEX_SPRITE_START = 1;
 
-    Memory();
+    Memory(bool allow_unaligned = false);
     ~Memory();
 
     uint8_t read8(unsigned idx);
@@ -54,6 +54,8 @@ public:
     void write16(unsigned idx, uint16_t val);
 private:
     uint8_t *mem;
+
+    bool allow_unaligned;
 
     void init_hex_sprites(void);
 };

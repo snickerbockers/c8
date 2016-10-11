@@ -43,8 +43,9 @@
 
 #include "Chip8.h"
 
-Chip8::Chip8() : mem(), screen(), cpu(&mem, &screen, &kbd),
-                 freq(DEFAULT_FREQ), kbd(this) {
+Chip8::Chip8(bool allow_unaligned) : mem(allow_unaligned), screen(),
+                                     cpu(&mem, &screen, &kbd),
+                                     freq(DEFAULT_FREQ), kbd(this) {
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 

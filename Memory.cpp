@@ -41,10 +41,12 @@
 
 #include "Memory.h"
 
-Memory::Memory() {
+Memory::Memory(bool allow_unaligned) {
     mem = new uint8_t[MEM_SZ];
     memset(mem, 0, sizeof(uint8_t) * MEM_SZ);
     init_hex_sprites();
+
+    this->allow_unaligned = true;
 }
 
 Memory::~Memory() {
@@ -64,18 +66,18 @@ void Memory::write8(unsigned idx, uint8_t val) {
 }
 
 uint16_t Memory::read16(unsigned idx) {
-    if (idx >= MEM_SZ)
+    if (idx >= (MEM_SZ - 1))
         throw MemBoundsError(idx);
-    if (idx & 1)
+    if ((idx & 1) && !allow_unaligned)
         throw MemAlignError(idx);
 
     return (mem[idx] << 8) | mem[idx + 1];
 }
 
 void Memory::write16(unsigned idx, uint16_t val) {
-    if (idx >= MEM_SZ)
+    if (idx >= (MEM_SZ - 1))
         throw MemBoundsError(idx);
-    if (idx & 1)
+    if ((idx & 1) && !allow_unaligned)
         throw MemAlignError(idx);
 
     mem[idx] = (val & 0xff00) >> 8;

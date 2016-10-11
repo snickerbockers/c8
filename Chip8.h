@@ -48,7 +48,7 @@ class Chip8 {
 public:
     const static int DEFAULT_FREQ = 1760000; // 1.76MHz
 
-    Chip8();
+    Chip8(bool allow_unaligned = false);
 
     void main_loop();
 
