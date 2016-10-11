@@ -744,7 +744,7 @@ void Cpu::inst_ld_push_regs(unsigned reg_no) {
     }
 
     for (unsigned idx = 0; idx <= reg_no; idx++) {
-        mem->write8(reg_i + idx, v[reg_no]);
+        mem->write8(reg_i + idx, v[idx]);
     }
 
     pc += 2;
