@@ -45,6 +45,7 @@
 
 #include <stdint.h>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <exception>
 
@@ -259,7 +260,7 @@ void read_instruction(std::fstream *stream)
     stream->read((char*)&inst_lo, sizeof(inst_lo));
     inst = unsigned(inst_hi) << 8 | inst_lo;
     std::cout << std::hex << offset << ": " << decode_instruction(inst) << "\t;; " <<
-        std::hex << unsigned(inst) << std::endl;
+        std::setfill('0') << std::setw(4) << std::hex << unsigned(inst) << std::endl;
     offset += 2;
 }
 
