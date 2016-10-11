@@ -44,13 +44,13 @@ CFLAGS=--std=c++03 -g
 c8asm: c8asm.o
 	g++ -o c8asm $<
 
-c8: main.o Screen.o Memory.o Chip8.o Cpu.o Keyboard.cpp
+c8: main.o Screen.o Memory.o Chip8.o Cpu.o Keyboard.o
 	g++ -o c8 $+ $(LDFLAGS)
 
 %.o: %.cpp $(HEADERS)
 	g++ -c $< $(CFLAGS)
 
 clean:
-	for file in $(ls *.o) ; do rm $file ; done
+	rm *.o
 	if test -f c8 ; then rm c8 ; fi
 	if test -f c8asm ; then rm c8asm ; fi
