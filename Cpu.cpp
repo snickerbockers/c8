@@ -51,6 +51,7 @@ Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd) {
     pc = ROM_START_ADDR;
     reg_i = 0;
     key_irq_active = false;
+    key_irq = false;
 
     this->mem = mem;
     this->screen = screen;
