@@ -48,7 +48,6 @@ public:
     const static int N_KEYS = 16;
 
     Keyboard(Chip8 *c8);
-    ~Keyboard();
 
     void bind_key(int key, SDL_Scancode bind);
 
@@ -57,8 +56,8 @@ public:
     void handle_key_event(SDL_KeyboardEvent const *event);
 
 private:
-    SDL_Scancode binds[N_KEYS];
-    bool *key_states;
+    bool key_states[N_KEYS];
+    int binds[SDL_NUM_SCANCODES];
 
     Chip8 *c8;
 };

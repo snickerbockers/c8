@@ -47,8 +47,8 @@
 Keyboard::Keyboard(Chip8 *c8) {
     this->c8 = c8;
 
-    key_states = new bool[SDL_NUM_SCANCODES];
-    memset(key_states, 0, sizeof(bool) * SDL_NUM_SCANCODES);
+    memset(key_states, 0, sizeof(key_states));
+    memset(binds, -1, sizeof(binds));
 
     bind_key(0, SDL_SCANCODE_0);
     bind_key(1, SDL_SCANCODE_1);
@@ -60,24 +60,39 @@ Keyboard::Keyboard(Chip8 *c8) {
     bind_key(7, SDL_SCANCODE_7);
     bind_key(8, SDL_SCANCODE_8);
     bind_key(9, SDL_SCANCODE_9);
+
+    bind_key(0, SDL_SCANCODE_KP_0);
+    bind_key(1, SDL_SCANCODE_KP_1);
+    bind_key(2, SDL_SCANCODE_KP_2);
+    bind_key(3, SDL_SCANCODE_KP_3);
+    bind_key(4, SDL_SCANCODE_KP_4);
+    bind_key(5, SDL_SCANCODE_KP_5);
+    bind_key(6, SDL_SCANCODE_KP_6);
+    bind_key(7, SDL_SCANCODE_KP_7);
+    bind_key(8, SDL_SCANCODE_KP_8);
+    bind_key(9, SDL_SCANCODE_KP_9);
+
     bind_key(10, SDL_SCANCODE_A);
     bind_key(11, SDL_SCANCODE_B);
     bind_key(12, SDL_SCANCODE_C);
     bind_key(13, SDL_SCANCODE_D);
     bind_key(14, SDL_SCANCODE_E);
     bind_key(15, SDL_SCANCODE_F);
-}
 
-Keyboard::~Keyboard() {
-    delete[] key_states;
+    bind_key(10, SDL_SCANCODE_KP_A);
+    bind_key(11, SDL_SCANCODE_KP_B);
+    bind_key(12, SDL_SCANCODE_KP_C);
+    bind_key(13, SDL_SCANCODE_KP_D);
+    bind_key(14, SDL_SCANCODE_KP_E);
+    bind_key(15, SDL_SCANCODE_KP_F);
 }
 
 void Keyboard::bind_key(int key, SDL_Scancode bind) {
-    if (key < 0 || key >= N_KEYS) {
-        throw InvalidParamError("invalid key index");
+    if (bind < 0 || key >= SDL_NUM_SCANCODES) {
+        throw InvalidParamError("invalid bind index");
     }
 
-    binds[key] = bind;
+    binds[bind] = key;
 }
 
 bool Keyboard::get_key_state(int key) const {
@@ -85,19 +100,19 @@ bool Keyboard::get_key_state(int key) const {
         throw InvalidParamError("invalid key index");
     }
 
-    return key_states[binds[key]];
+    return key_states[key];
 }
 
 void Keyboard::handle_key_event(SDL_KeyboardEvent const *event) {
+    int key_no;
     SDL_Scancode scancode = event->keysym.scancode;
 
     if (scancode < 0 || scancode >= SDL_NUM_SCANCODES)
         throw InvalidParamError("invalid key index"); // should be inpossible
 
-    key_states[scancode] = (event->state == SDL_PRESSED);
-
-    if (event->state)
-        for (int key_no = 0; key_no < N_KEYS; key_no++)
-            if (binds[key_no] == scancode)
-                c8->int_key(key_no);
+    key_no = binds[scancode];
+    if (key_no >= 0 && key_no < N_KEYS) {
+        key_states[key_no] = (event->state == SDL_PRESSED);
+        c8->int_key(key_no);
+    }
 }
