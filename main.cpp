@@ -39,6 +39,7 @@
 #include <iostream>
 #include <exception>
 #include <cstdlib>
+#include <sys/time.h>
 
 #include "Chip8.h"
 
@@ -66,6 +67,11 @@ int main(int argc, char **argv) {
         std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
         return 1;
     }
+
+    // seed libc's random number generator
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    srand(tv.tv_sec);
 
     Chip8 c8(allow_unaligned);
 
