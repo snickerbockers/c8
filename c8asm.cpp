@@ -219,7 +219,7 @@ std::string decode_instruction(inst_t inst)
             return std::string("LD V") + nibble_to_hex(nibbles[2]) + ", DT";
         } else if (nibbles[1] == 0x0 && nibbles[0] == 0xa) {
             // Fx0A
-            return std::string("LD V"), + nibble_to_hex(nibbles[2]) + ", K";
+            return std::string("LD V") + nibble_to_hex(nibbles[2]) + ", K";
         } else if (nibbles[1] == 0x1 && nibbles[0] == 0x5) {
             // Fx15
             return std::string("LD ST, V") + nibble_to_hex(nibbles[2]);
