@@ -760,7 +760,7 @@ void Cpu::inst_ld_pop_regs(unsigned reg_no) {
     }
 
     for (unsigned idx = 0; idx <= reg_no; idx++) {
-        v[reg_no] = mem->read8(reg_i + idx);
+        v[idx] = mem->read8(reg_i + idx);
     }
 
     pc += 2;
