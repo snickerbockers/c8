@@ -94,40 +94,68 @@ private:
     static unsigned get_addr_from_inst(inst_t inst);
     static unsigned get_low_byte_from_inst(inst_t inst);
 
-    void inst_cls(void);
-    void inst_ret(void);
-    void inst_jp(unsigned where_to);
-    void inst_call(unsigned where_to);
-    void inst_se_reg_val(unsigned reg_no, unsigned val);
-    void inst_sne_reg_val(unsigned reg_no, unsigned val);
-    void inst_se_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_ld_reg_val(unsigned reg_no, unsigned val);
-    void inst_add_reg_val(unsigned reg_no, unsigned val);
-    void inst_ld_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_or_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_and_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_xor_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_add_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_sub_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_shr_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_subn_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_shl_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_sne_reg_reg(unsigned reg1, unsigned reg2);
-    void inst_ld_i(unsigned addr);
-    void inst_jp_offset(unsigned addr);
-    void inst_rnd(unsigned reg_no, unsigned val);
-    void inst_drw(unsigned reg1, unsigned reg2, unsigned n_bytes);
-    void inst_skp_key(unsigned reg_no);
-    void inst_sknp_key(unsigned reg_no);
-    void inst_ld_reg_tim(unsigned reg_no);
-    void inst_ld_key(unsigned reg_no);
-    void inst_ld_tim_reg(unsigned reg_no);
-    void inst_ld_snd_reg(unsigned reg_no);
-    void inst_add_i_reg(unsigned reg_no);
-    void inst_ld_i_hex(unsigned reg_no);
-    void inst_ld_bcd(unsigned reg_no);
-    void inst_ld_push_regs(unsigned reg_no);
-    void inst_ld_pop_regs(unsigned reg_no);
+    struct args_reg_val {
+        unsigned reg_no, val;
+    };
+
+    struct args_reg_reg {
+        unsigned reg1, reg2;
+    };
+
+    struct args_addr {
+        unsigned addr;
+    };
+
+    struct args_drw {
+        unsigned reg1, reg2, n_bytes;
+    };
+
+    struct args_reg {
+        unsigned reg_no;
+    };
+
+    union inst_args {
+        struct args_reg_val reg_val;
+        struct args_reg_reg reg_reg;
+        struct args_reg     reg;
+        struct args_addr    addr;
+        struct args_drw     drw;
+    };
+
+    void inst_cls(union inst_args const *args);
+    void inst_ret(union inst_args const *args);
+    void inst_jp(union inst_args const *args);
+    void inst_call(union inst_args const *args);
+    void inst_se_reg_val(union inst_args const *args);
+    void inst_sne_reg_val(union inst_args const *args);
+    void inst_se_reg_reg(union inst_args const *args);
+    void inst_ld_reg_val(union inst_args const *args);
+    void inst_add_reg_val(union inst_args const *args);
+    void inst_ld_reg_reg(union inst_args const *args);
+    void inst_or_reg_reg(union inst_args const *args);
+    void inst_and_reg_reg(union inst_args const *args);
+    void inst_xor_reg_reg(union inst_args const *args);
+    void inst_add_reg_reg(union inst_args const *args);
+    void inst_sub_reg_reg(union inst_args const *args);
+    void inst_shr_reg_reg(union inst_args const *args);
+    void inst_subn_reg_reg(union inst_args const *args);
+    void inst_shl_reg_reg(union inst_args const *args);
+    void inst_sne_reg_reg(union inst_args const *args);
+    void inst_ld_i(union inst_args const *args);
+    void inst_jp_offset(union inst_args const *args);
+    void inst_rnd(union inst_args const *args);
+    void inst_drw(union inst_args const *args);
+    void inst_skp_key(union inst_args const *args);
+    void inst_sknp_key(union inst_args const *args);
+    void inst_ld_reg_tim(union inst_args const *args);
+    void inst_ld_key(union inst_args const *args);
+    void inst_ld_tim_reg(union inst_args const *args);
+    void inst_ld_snd_reg(union inst_args const *args);
+    void inst_add_i_reg(union inst_args const *args);
+    void inst_ld_i_hex(union inst_args const *args);
+    void inst_ld_bcd(union inst_args const *args);
+    void inst_ld_push_regs(union inst_args const *args);
+    void inst_ld_pop_regs(union inst_args const *args);
 };
 
 #endif
