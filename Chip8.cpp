@@ -46,7 +46,7 @@
 Chip8::Chip8(bool allow_unaligned) : mem(allow_unaligned), screen(),
                                      cpu(&mem, &screen, &kbd),
                                      kbd(this) {
-    freq = DEFAULT_FREQ;
+    mpi = 1000 / DEFAULT_IPS;
 
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
@@ -58,21 +58,16 @@ void Chip8::main_loop() {
     SDL_Event event;
     int is_running = 1;
     unsigned cur_ticks, prev_ticks, delta_ticks;
-    unsigned cycles_to_exec;
     unsigned last_int_tim_ticks;
+    unsigned accum_ticks = 0;
 
     last_int_tim_ticks = cur_ticks = prev_ticks = SDL_GetTicks();
 
     while (is_running) {
-        /*
-         * TODO: The math here should be revisited since we will lose cycles if
-         *       freq is not evenly divisible by 1000.
-         */
         prev_ticks = cur_ticks;
         cur_ticks = SDL_GetTicks();
         delta_ticks = cur_ticks - prev_ticks;
-        cycles_to_exec = delta_ticks * (freq / 1000);
-        cycles_to_exec = 1;
+        accum_ticks += delta_ticks;
 
         if ((cur_ticks - last_int_tim_ticks) >= (1000.0 / 60.0)) {
             last_int_tim_ticks = cur_ticks;
@@ -86,7 +81,7 @@ void Chip8::main_loop() {
                 kbd.handle_key_event(&event.key);
         }
 
-        while (cycles_to_exec--) {
+        while (accum_ticks >= mpi) {
             if (cpu.next_inst()) {
                 char choice;
                 do {
@@ -100,13 +95,22 @@ void Chip8::main_loop() {
                     if (choice == 'n')
                         cpu.next_inst();
                 } while (choice != 'c');
+
+                /*
+                 * Don't let breakpoints accumulate too much frame time.
+                 * This works by nuking it down so that delta_ticks will almost
+                 * certainly be zero next frame, but there are bound to be
+                 * inaccuracies when you suspend execution like this.  Some sort
+                 * of virtual timing system may be possible, but it's not worth
+                 * the effort on a CHIP-8 emulator's debugger.
+                 */
+                cur_ticks = SDL_GetTicks();
             }
+
+            accum_ticks -= mpi;
         }
 
         screen.flip();
-
-        // STUPID HACK - WE GOTTA FIX THE TIMING FOLKS
-        SDL_Delay(1);
     }
 }
 

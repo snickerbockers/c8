@@ -46,7 +46,8 @@
 
 class Chip8 {
 public:
-    const static int DEFAULT_FREQ = 1760000; // 1.76MHz
+    // default instructions per second
+    const static int DEFAULT_IPS = 500;
 
     Chip8(bool allow_unaligned = false);
 
@@ -66,7 +67,7 @@ private:
     Cpu cpu;
     Keyboard kbd;
 
-    unsigned freq;
+    unsigned mpi; //Milliseconds Per Instruction
 };
 
 #endif
