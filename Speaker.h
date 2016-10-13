@@ -35,56 +35,28 @@
  *
  ******************************************************************************/
 
-#include <unistd.h>
-#include <iostream>
-#include <exception>
-#include <cstdlib>
-#include <sys/time.h>
+#ifndef SPEAKER_H_
+#define SPEAKER_H_
 
-#include "Chip8.h"
+#include <SDL2/SDL_stdinc.h>
 
-int main(int argc, char **argv) {
-    char optchar;
-    int bp = -1;
-    bool allow_unaligned = false;
+class Speaker {
+public:
+    static const unsigned DEFAULT_FREQ = 440;
+    static const unsigned SAMP_FREQ = 44100;
+    static const double DEFAULT_VOL_SCALE = 0.25;
 
-    while ((optchar = getopt(argc, argv, "b:u")) != -1) {
-        if (optchar == 'b') {
-            bp = atoi(optarg);
-        } else if (optchar == 'u') {
-            allow_unaligned = true;
-        } else {
-            std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
-            return 1;
-        }
-    }
-    argc -= optind;
-    argv += optind;
+    Speaker(unsigned freq = DEFAULT_FREQ, double vol_scale = DEFAULT_VOL_SCALE);
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+    void start(void);
+    void stop(void);
 
-    if (argc != 1) {
-        std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
-        return 1;
-    }
+    static void static_audio_callback(void *userdata, Uint8 *stream, int len);
+    void audio_callback(Uint8 *stream, int len);
+private:
+    unsigned freq;
+    unsigned sample_no;
+    double vol_scale;
+};
 
-    // seed libc's random number generator
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    srand(tv.tv_sec);
-
-    Chip8 c8(allow_unaligned);
-
-    try {
-        c8.load_rom(argv[0]);
-        c8.set_breakpoint(bp);
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
-    }
-
-    SDL_Quit();
-
-    return 0;
-}
+#endif

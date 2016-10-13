@@ -40,10 +40,11 @@
 #include <iostream>
 
 #include "BaseException.h"
+#include "Speaker.h"
 
 #include "Cpu.h"
 
-Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd) {
+Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd, Speaker *speaker) {
     memset(v, 0, sizeof(v));
     memset(stack, 0, sizeof(stack));
     tim = snd = 0;
@@ -56,6 +57,7 @@ Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd) {
     this->mem = mem;
     this->screen = screen;
     this->kbd = kbd;
+    this->speaker = speaker;
 
     set_breakpoint(-1);
 }
@@ -65,6 +67,8 @@ void Cpu::int_tim(void) {
         tim--;
     if (snd)
         snd--;
+    if (!snd)
+        speaker->stop();
 }
 
 void Cpu::int_key(int which_key) {
@@ -696,6 +700,10 @@ void Cpu::inst_ld_snd_reg(union inst_args const *args) {
     }
 
     snd = v[reg_no];
+    if (snd)
+        speaker->start();
+    else
+        speaker->stop();
 
     pc += 2;
 }

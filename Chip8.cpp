@@ -44,7 +44,8 @@
 #include "Chip8.h"
 
 Chip8::Chip8(bool allow_unaligned) : mem(allow_unaligned), screen(),
-                                     cpu(&mem, &screen, &kbd),
+                                     speaker(),
+                                     cpu(&mem, &screen, &kbd, &speaker),
                                      kbd(this) {
     mpi = 1000 / DEFAULT_IPS;
 

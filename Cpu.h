@@ -43,6 +43,7 @@
 #include "Memory.h"
 #include "Screen.h"
 #include "Keyboard.h"
+#include "Speaker.h"
 
 class Cpu {
 public:
@@ -50,7 +51,7 @@ public:
     static const int REG_COUNT = 16;
     static const int STACK_SZ = 16;
 
-    Cpu(Memory *mem, Screen *screen, Keyboard *kbd);
+    Cpu(Memory *mem, Screen *screen, Keyboard *kbd, Speaker *speaker);
 
     /*
      * Timer interrupts.  These don't go to the software, but they do signal to
@@ -76,6 +77,7 @@ private:
     Memory *mem;
     Screen *screen;
     Keyboard *kbd;
+    Speaker *speaker;
 
     uint8_t v[REG_COUNT];     // general-purpose registers
     uint16_t reg_i;           // the address register

@@ -43,6 +43,7 @@
 #include "Memory.h"
 #include "Screen.h"
 #include "Keyboard.h"
+#include "Speaker.h"
 
 class Chip8 {
 public:
@@ -64,6 +65,7 @@ public:
 private:
     Memory mem;
     Screen screen;
+    Speaker speaker;
     Cpu cpu;
     Keyboard kbd;
 

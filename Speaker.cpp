@@ -35,56 +35,53 @@
  *
  ******************************************************************************/
 
-#include <unistd.h>
-#include <iostream>
-#include <exception>
-#include <cstdlib>
-#include <sys/time.h>
+#include <SDL2/SDL_audio.h>
 
-#include "Chip8.h"
+#include <cmath>
+#include <climits>
 
-int main(int argc, char **argv) {
-    char optchar;
-    int bp = -1;
-    bool allow_unaligned = false;
+#include "Speaker.h"
 
-    while ((optchar = getopt(argc, argv, "b:u")) != -1) {
-        if (optchar == 'b') {
-            bp = atoi(optarg);
-        } else if (optchar == 'u') {
-            allow_unaligned = true;
-        } else {
-            std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
-            return 1;
-        }
+Speaker::Speaker(unsigned freq, double vol_scale) {
+    this->freq = freq;
+    this->sample_no = 0;
+    this->vol_scale = vol_scale;
+
+    SDL_AudioSpec spec, actual_spec;
+
+    spec.freq = SAMP_FREQ;
+    spec.format = AUDIO_S16SYS;
+    spec.channels = 1;
+    spec.silence = 0;
+    spec.samples = SAMP_FREQ;
+    spec.padding = 0;
+    spec.size = 0;
+    spec.callback = static_audio_callback;
+    spec.userdata = this;
+
+    SDL_OpenAudio(&spec, &actual_spec);
+}
+
+void Speaker::static_audio_callback(void *userdata, Uint8 *stream, int len) {
+    ((Speaker*)userdata)->audio_callback(stream, len);
+}
+
+void Speaker::audio_callback(Uint8 *stream, int len) {
+    Sint16 *out = (Sint16*)stream;
+
+    while (len >= 2) {
+        *out++ = (Sint16)(sin(2.0 * M_PI * freq *
+                              double(sample_no++) / SAMP_FREQ) *
+                          vol_scale * SHRT_MAX);
+
+        len -= 2;
     }
-    argc -= optind;
-    argv += optind;
+}
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO);
+void Speaker::start(void) {
+    SDL_PauseAudio(0);
+}
 
-    if (argc != 1) {
-        std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
-        return 1;
-    }
-
-    // seed libc's random number generator
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    srand(tv.tv_sec);
-
-    Chip8 c8(allow_unaligned);
-
-    try {
-        c8.load_rom(argv[0]);
-        c8.set_breakpoint(bp);
-        c8.main_loop();
-    } catch (std::exception err) {
-        std::cerr << err.what() << std::endl;
-        return 1;
-    }
-
-    SDL_Quit();
-
-    return 0;
+void Speaker::stop(void) {
+    SDL_PauseAudio(1);
 }
