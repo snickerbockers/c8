@@ -122,8 +122,29 @@ private:
         struct args_drw     drw;
     };
 
+    enum arg_type {
+        ARG_NONE,
+        ARG_REG_VAL,
+        ARG_REG_REG,
+        ARG_REG,
+        ARG_ADDR,
+        ARG_DRW
+    };
+    typedef enum arg_type arg_type_t;
+
+    typedef void (Cpu::*opcode_func_t)(union inst_args const *args);
+    static const struct opcode {
+        char const *pattern;
+        char const *opcode;
+        opcode_func_t func;
+        arg_type_t arg_type;
+    } opcodes[];
+
+    struct Cpu::opcode const *decode_inst(inst_t inst) const;
+
     void inst_cls(union inst_args const *args);
     void inst_ret(union inst_args const *args);
+    void inst_sys(union inst_args const *args);
     void inst_jp(union inst_args const *args);
     void inst_call(union inst_args const *args);
     void inst_se_reg_val(union inst_args const *args);

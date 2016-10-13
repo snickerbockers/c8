@@ -86,9 +86,85 @@ unsigned Cpu::get_pc() const {
     return pc;
 }
 
+const struct Cpu::opcode Cpu::opcodes[] = {
+    { "00E0", "CLS",  &Cpu::inst_cls,          ARG_NONE },
+    { "00EE", "RET",  &Cpu::inst_ret,          ARG_NONE },
+    { "0nnn", "SYS",  &Cpu::inst_sys,          ARG_ADDR },
+    { "1nnn", "JP",   &Cpu::inst_jp,           ARG_ADDR },
+    { "2nnn", "CALL", &Cpu::inst_call,         ARG_ADDR },
+    { "3xkk", "SE",   &Cpu::inst_se_reg_val,   ARG_REG_VAL },
+    { "4xkk", "SNE",  &Cpu::inst_sne_reg_val,  ARG_REG_VAL },
+    { "5xy0", "SE",   &Cpu::inst_se_reg_reg,   ARG_REG_REG },
+    { "6xkk", "LD",   &Cpu::inst_ld_reg_val,   ARG_REG_VAL },
+    { "7xkk", "ADD",  &Cpu::inst_add_reg_val,  ARG_REG_VAL },
+    { "8xy0", "LD",   &Cpu::inst_ld_reg_reg,   ARG_REG_REG },
+    { "8xy1", "OR",   &Cpu::inst_or_reg_reg,   ARG_REG_REG },
+    { "8xy2", "AND",  &Cpu::inst_and_reg_reg,  ARG_REG_REG },
+    { "8xy3", "XOR",  &Cpu::inst_xor_reg_reg,  ARG_REG_REG },
+    { "8xy4", "ADD",  &Cpu::inst_add_reg_reg,  ARG_REG_REG },
+    { "8xy5", "SUB",  &Cpu::inst_sub_reg_reg,  ARG_REG_REG },
+    { "8xy6", "SHR",  &Cpu::inst_shr_reg_reg,  ARG_REG_REG },
+    { "8xy7", "SUBN", &Cpu::inst_subn_reg_reg, ARG_REG_REG },
+    { "8xyE", "SHL",  &Cpu::inst_shl_reg_reg,  ARG_REG_REG },
+    { "9xy0", "SNE",  &Cpu::inst_sne_reg_reg,  ARG_REG_REG },
+    { "Annn", "LD",   &Cpu::inst_ld_i,         ARG_ADDR },
+    { "Bnnn", "JP",   &Cpu::inst_jp_offset,    ARG_ADDR },
+    { "Cxkk", "RND",  &Cpu::inst_rnd,          ARG_REG_VAL },
+    { "Dxyn", "DRW",  &Cpu::inst_drw,          ARG_DRW },
+    { "Ex9E", "SKP",  &Cpu::inst_skp_key,      ARG_REG },
+    { "ExA1", "SKNP", &Cpu::inst_sknp_key,     ARG_REG },
+    { "Fx07", "LD",   &Cpu::inst_ld_reg_tim,   ARG_REG },
+    { "Fx0A", "LD",   &Cpu::inst_ld_key,       ARG_REG },
+    { "Fx15", "LD",   &Cpu::inst_ld_tim_reg,   ARG_REG },
+    { "Fx18", "LD",   &Cpu::inst_ld_snd_reg,   ARG_REG },
+    { "Fx1E", "ADD",  &Cpu::inst_add_i_reg,    ARG_REG },
+    { "Fx29", "LD",   &Cpu::inst_ld_i_hex,     ARG_REG },
+    { "Fx33", "LD",   &Cpu::inst_ld_bcd,       ARG_REG },
+    { "Fx55", "LD",   &Cpu::inst_ld_push_regs, ARG_REG },
+    { "Fx65", "LD",   &Cpu::inst_ld_pop_regs,  ARG_REG },
+    { NULL, NULL, NULL }
+};
+
+struct Cpu::opcode const *Cpu::decode_inst(Cpu::inst_t inst) const {
+    struct opcode const *curs = opcodes;
+
+    unsigned nibbles[] = {
+        get_nibble_from_inst(inst, 0),
+        get_nibble_from_inst(inst, 1),
+        get_nibble_from_inst(inst, 2),
+        get_nibble_from_inst(inst, 3)
+    };
+
+    while (curs->pattern) {
+        int idx;
+        for (idx = 0; idx < 4; idx++) {
+            char c = curs->pattern[idx];
+            unsigned val;
+
+            if (c >= '0' && c <= '9')
+                val = c - '0';
+            else if (c >= 'A' && c <= 'F')
+                val = c - 'A' + 0xa;
+            else
+                continue;
+
+            if (val != nibbles[3 - idx])
+                break;
+        }
+
+        if (idx == 4) {
+            return curs;
+        }
+        curs++;
+    }
+
+    return NULL;
+}
+
 bool Cpu::next_inst(void) {
     inst_t inst;
     union inst_args args;
+    struct opcode const *opcode;
 
     if (pc == breakpoint)
         return true;
@@ -101,224 +177,40 @@ bool Cpu::next_inst(void) {
         get_nibble_from_inst(inst, 3)
     };
 
-    if (nibbles[3] == 0) {
-        if (nibbles[2] == 0) {
-            if (nibbles[1] == 0xE) {
-                if (nibbles[0] == 0) {
-                    //00E0
-                    inst_cls(&args);
-                    goto on_ret;
-                } else if (nibbles[0] == 0xE) {
-                    //00EE
-                    inst_ret(&args);
-                    goto on_ret;
-                }
-            }
-        }
-        // 0NNN - this will never be implemented
-        throw UnimplementedInstructionError("SYS");
-    } else if (nibbles[3] == 1) {
-        // 1NNN
-        args.addr.addr = get_addr_from_inst(inst);
-        inst_jp(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 2) {
-        // 2NNN
-        args.addr.addr = get_addr_from_inst(inst);
-        inst_call(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 3) {
-        // 3xkk
-        args.reg_val.reg_no = nibbles[2];
-        args.reg_val.val = get_low_byte_from_inst(inst);
-        inst_se_reg_val(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 4) {
-        // 4xkk
-        args.reg_val.reg_no = nibbles[2];
-        args.reg_val.val = get_low_byte_from_inst(inst);
-        inst_sne_reg_val(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 5) {
-        if (nibbles[0] == 0) {
-            // 5xy0
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_se_reg_reg(&args);
-            goto on_ret;
-        } else {
-            throw BadOpcodeError();
-        }
-    } else if (nibbles[3] == 6) {
-        // 6xkk
-        args.reg_val.reg_no = nibbles[2];
-        args.reg_val.val = get_low_byte_from_inst(inst);
-        inst_ld_reg_val(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 7) {
-        // 7xkk
-        args.reg_val.reg_no = nibbles[2];
-        args.reg_val.val = get_low_byte_from_inst(inst);
-        inst_add_reg_val(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 8) {
-        if (nibbles[0] == 0) {
-            // 8xy0
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_ld_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 1) {
-            // 8xy1
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_or_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 2) {
-            // 8xy2
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_and_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 3) {
-            // 8xy3
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_xor_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 4) {
-            // 8xy4
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_add_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 5) {
-            // 8xy5
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_sub_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 6) {
-            // 8xy6
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_shr_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 7) {
-            // 8xy7
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_subn_reg_reg(&args);
-            goto on_ret;
-        } else if (nibbles[0] == 0xe) {
-            // 8xye
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_shl_reg_reg(&args);
-            goto on_ret;
-        }
-
+    opcode = decode_inst(inst);
+    if (!opcode)
         throw BadOpcodeError();
-    } else if (nibbles[3] == 9) {
-        // 9xy0
-        if (nibbles[0] == 0) {
-            args.reg_reg.reg1 = nibbles[2];
-            args.reg_reg.reg2 = nibbles[1];
-            inst_sne_reg_reg(&args);
-            goto on_ret;
-        }
 
-        throw BadOpcodeError();
-    } else if (nibbles[3] == 0xa) {
-        // Annn
-        args.addr.addr = get_addr_from_inst(inst);
-        inst_ld_i(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 0xb) {
-        // Bnnn
-        args.addr.addr = get_addr_from_inst(inst);
-        inst_jp_offset(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 0xc) {
-        // Cxkk
+    // std::cout << std::hex << inst << ": " << opcode->pattern << std::endl;
+
+    switch (opcode->arg_type) {
+    case ARG_NONE:
+        break;
+    case ARG_REG_VAL:
         args.reg_val.reg_no = nibbles[2];
         args.reg_val.val = get_low_byte_from_inst(inst);
-        inst_rnd(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 0xd) {
-        // Dxyn
+        break;
+    case ARG_REG_REG:
+        args.reg_reg.reg1 = nibbles[2];
+        args.reg_reg.reg2 = nibbles[1];
+        break;
+    case ARG_REG:
+        args.reg.reg_no = nibbles[2];
+        break;
+    case ARG_ADDR:
+        args.addr.addr = get_addr_from_inst(inst);
+        break;
+    case ARG_DRW:
         args.drw.reg1 = nibbles[2];
         args.drw.reg2 = nibbles[1];
         args.drw.n_bytes = nibbles[0];
-        inst_drw(&args);
-        goto on_ret;
-    } else if (nibbles[3] == 0xe) {
-        if (nibbles[1] == 0x9 && nibbles[0] == 0xe) {
-            // Ex9E
-            args.reg.reg_no = nibbles[2];
-            inst_skp_key(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0xA && nibbles[0] == 0x1) {
-            // EXA1
-            args.reg.reg_no = nibbles[2];
-            inst_sknp_key(&args);
-            goto on_ret;
-        }
-        throw BadOpcodeError();
-    } else if (nibbles[3] == 0xf) {
-        if (nibbles[1] == 0x0 && nibbles[0] == 0x7) {
-            // Fx07
-            args.reg.reg_no = nibbles[2];
-            inst_ld_reg_tim(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x0 && nibbles[0] == 0xa) {
-            // Fx0A
-            args.reg.reg_no = nibbles[2];
-            inst_ld_key(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x1 && nibbles[0] == 0x5) {
-            // Fx15
-            args.reg.reg_no = nibbles[2];
-            inst_ld_tim_reg(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x1 && nibbles[0] == 0x8) {
-            // Fx18
-            args.reg.reg_no = nibbles[2];
-            inst_ld_snd_reg(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x1 && nibbles[0] == 0xe) {
-            // Fx1E
-            args.reg.reg_no = nibbles[2];
-            inst_add_i_reg(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x2 && nibbles[0] == 0x9) {
-            // Fx29
-            args.reg.reg_no = nibbles[2];
-            inst_ld_i_hex(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x3 && nibbles[0] == 0x3) {
-            // Fx33
-            args.reg.reg_no = nibbles[2];
-            inst_ld_bcd(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x5 && nibbles[0] == 0x5) {
-            // Fx55
-            args.reg.reg_no = nibbles[2];
-            inst_ld_push_regs(&args);
-            goto on_ret;
-        } else if (nibbles[1] == 0x6 && nibbles[0] == 0x5) {
-            // Fx65
-            args.reg.reg_no = nibbles[2];
-            inst_ld_pop_regs(&args);
-            goto on_ret;
-        }
-
-        throw BadOpcodeError();
+        break;
+    default:
+        throw BadOpcodeError(); // should never happen
     }
 
-    throw BadOpcodeError();
+    (this->*opcode->func)(&args);
 
-on_ret:
     return false;
 }
 
@@ -366,6 +258,11 @@ void Cpu::inst_ret(union inst_args const *args) {
         throw StackUnderflowError();
 
     pc = stack[sp--];
+}
+
+// SYS - execute native machine code (unimplemented)
+void Cpu::inst_sys(union inst_args const *args) {
+    throw UnimplementedInstructionError("SYS");
 }
 
 // JP - jump to address
