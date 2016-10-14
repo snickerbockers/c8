@@ -46,6 +46,7 @@ Speaker::Speaker(unsigned freq, double vol_scale) {
     this->freq = freq;
     this->sample_no = 0;
     this->vol_scale = vol_scale;
+    this->is_muted = false;
 
     SDL_AudioSpec spec, actual_spec;
 
@@ -79,9 +80,16 @@ void Speaker::audio_callback(Uint8 *stream, int len) {
 }
 
 void Speaker::start(void) {
-    SDL_PauseAudio(0);
+    if (!is_muted)
+        SDL_PauseAudio(0);
 }
 
 void Speaker::stop(void) {
     SDL_PauseAudio(1);
+}
+
+void Speaker::mute(bool do_mute) {
+    if (do_mute)
+        SDL_PauseAudio(1);
+    this->is_muted = do_mute;
 }

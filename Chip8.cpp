@@ -43,16 +43,18 @@
 
 #include "Chip8.h"
 
-Chip8::Chip8(bool allow_unaligned) : mem(allow_unaligned), screen(),
-                                     speaker(),
-                                     cpu(&mem, &screen, &kbd, &speaker),
-                                     kbd(this) {
+Chip8::Chip8(bool allow_unaligned, bool mute) : mem(allow_unaligned), screen(),
+                                                speaker(),
+                                                cpu(&mem, &screen, &kbd, &speaker),
+                                                kbd(this) {
     mpi = 1000 / DEFAULT_IPS;
 
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
     screen.clear();
+
+    speaker.mute(mute);
 }
 
 void Chip8::main_loop() {

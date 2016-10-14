@@ -47,12 +47,15 @@ int main(int argc, char **argv) {
     char optchar;
     int bp = -1;
     bool allow_unaligned = false;
+    bool mute = false;
 
-    while ((optchar = getopt(argc, argv, "b:u")) != -1) {
+    while ((optchar = getopt(argc, argv, "b:um")) != -1) {
         if (optchar == 'b') {
             bp = atoi(optarg);
         } else if (optchar == 'u') {
             allow_unaligned = true;
+        } else if (optchar == 'm') {
+            mute = true;
         } else {
             std::cerr << "Usage: " << argv[0] << " rom_path" << std::endl;
             return 1;
@@ -73,7 +76,7 @@ int main(int argc, char **argv) {
     gettimeofday(&tv, NULL);
     srand(tv.tv_sec);
 
-    Chip8 c8(allow_unaligned);
+    Chip8 c8(allow_unaligned, mute);
 
     try {
         c8.load_rom(argv[0]);

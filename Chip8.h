@@ -50,7 +50,7 @@ public:
     // default instructions per second
     const static int DEFAULT_IPS = 500;
 
-    Chip8(bool allow_unaligned = false);
+    Chip8(bool allow_unaligned = false, bool mute = false);
 
     void main_loop();
 

@@ -50,6 +50,7 @@ public:
 
     void start(void);
     void stop(void);
+    void mute(bool do_mute);
 
     static void static_audio_callback(void *userdata, Uint8 *stream, int len);
     void audio_callback(Uint8 *stream, int len);
@@ -57,6 +58,7 @@ private:
     unsigned freq;
     unsigned sample_no;
     double vol_scale;
+    bool is_muted;
 };
 
 #endif
