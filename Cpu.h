@@ -71,6 +71,8 @@ public:
 
     unsigned get_pc() const;
 
+    void print_regs() const;
+
 private:
     typedef uint16_t inst_t;
 

@@ -93,9 +93,19 @@ void Chip8::main_loop() {
 
                     std::cin >> choice;
 
-                    if (choice == 'n')
+                    switch (choice) {
+                    case 'n':
                         cpu.next_inst();
-                } while (choice != 'c');
+                        break;
+                    case 'q':
+                        is_running = 0;
+                        break;
+                    case 'g':
+                        cpu.print_regs();
+                    default:
+                        break;
+                    }
+                } while (choice != 'c' && choice != 'q');
 
                 /*
                  * Don't let breakpoints accumulate too much frame time.

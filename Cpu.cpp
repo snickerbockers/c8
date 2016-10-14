@@ -90,6 +90,15 @@ unsigned Cpu::get_pc() const {
     return pc;
 }
 
+void Cpu::print_regs() const {
+    for (int idx = 0; idx < REG_COUNT; idx++)
+        printf("v%d == %02x\n", idx, v[idx]);
+
+    printf("sp == %04x\n", sp);
+    printf("tim == %02x\n", tim);
+    printf("snd == %02x\n", snd);
+}
+
 const struct Cpu::opcode Cpu::opcodes[] = {
     { "00E0", "CLS",  &Cpu::inst_cls,          ARG_NONE },
     { "00EE", "RET",  &Cpu::inst_ret,          ARG_NONE },
