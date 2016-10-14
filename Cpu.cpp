@@ -458,8 +458,7 @@ void Cpu::inst_add_reg_reg(union inst_args const *args) {
     }
 
     tmp = v[reg1] + v[reg2];
-    if (tmp > 0xff)
-        v[0xf] = 1;
+    v[0xf] = (tmp > 0xff);
 
     v[reg1] = tmp;
     pc += 2;
