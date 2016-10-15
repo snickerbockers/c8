@@ -47,8 +47,6 @@ Chip8::Chip8(bool allow_unaligned, bool mute) : mem(allow_unaligned), screen(),
                                                 speaker(),
                                                 cpu(&mem, &screen, &kbd, &speaker),
                                                 kbd(this) {
-    mpi = 1000 / DEFAULT_IPS;
-
     screen.set_bg_color(Screen::pack_color(0x45, 0x19, 0x10, 0xff));
     screen.set_fg_color(Screen::pack_color(0x8c, 0x89, 0x83, 0xff));
 
@@ -57,7 +55,7 @@ Chip8::Chip8(bool allow_unaligned, bool mute) : mem(allow_unaligned), screen(),
     speaker.mute(mute);
 }
 
-void Chip8::main_loop() {
+void Chip8::event_loop() {
     SDL_Event event;
     int is_running = 1;
     unsigned cur_ticks, prev_ticks, delta_ticks;
@@ -65,6 +63,8 @@ void Chip8::main_loop() {
     unsigned accum_ticks = 0;
 
     last_int_tim_ticks = cur_ticks = prev_ticks = SDL_GetTicks();
+
+    cpu.start();
 
     while (is_running) {
         prev_ticks = cur_ticks;
@@ -78,49 +78,12 @@ void Chip8::main_loop() {
         }
 
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT)
+            if (event.type == SDL_QUIT) {
                 is_running = 0;
+                cpu.kill();
+            }
             else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
                 kbd.handle_key_event(&event.key);
-        }
-
-        while (accum_ticks >= mpi) {
-            if (cpu.next_inst()) {
-                char choice;
-                do {
-                    cpu.set_breakpoint(-1);
-
-                    std::cout << std::hex << cpu.get_pc() << std::endl;
-                    std::cout << "db> ";
-
-                    std::cin >> choice;
-
-                    switch (choice) {
-                    case 'n':
-                        cpu.next_inst();
-                        break;
-                    case 'q':
-                        is_running = 0;
-                        break;
-                    case 'g':
-                        cpu.print_regs();
-                    default:
-                        break;
-                    }
-                } while (choice != 'c' && choice != 'q');
-
-                /*
-                 * Don't let breakpoints accumulate too much frame time.
-                 * This works by nuking it down so that delta_ticks will almost
-                 * certainly be zero next frame, but there are bound to be
-                 * inaccuracies when you suspend execution like this.  Some sort
-                 * of virtual timing system may be possible, but it's not worth
-                 * the effort on a CHIP-8 emulator's debugger.
-                 */
-                cur_ticks = SDL_GetTicks();
-            }
-
-            accum_ticks -= mpi;
         }
 
         screen.flip();

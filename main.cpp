@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     try {
         c8.load_rom(argv[0]);
         c8.set_breakpoint(bp);
-        c8.main_loop();
+        c8.event_loop();
     } catch (std::exception err) {
         std::cerr << err.what() << std::endl;
         return 1;

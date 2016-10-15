@@ -47,12 +47,9 @@
 
 class Chip8 {
 public:
-    // default instructions per second
-    const static int DEFAULT_IPS = 500;
-
     Chip8(bool allow_unaligned = false, bool mute = false);
 
-    void main_loop();
+    void event_loop();
 
     void next_cycle();
 
@@ -68,8 +65,6 @@ private:
     Speaker speaker;
     Cpu cpu;
     Keyboard kbd;
-
-    unsigned mpi; //Milliseconds Per Instruction
 };
 
 #endif

@@ -47,6 +47,8 @@
 
 class Cpu {
 public:
+    // default instructions per second
+    const static int DEFAULT_IPS = 500;
     const static int ROM_START_ADDR = 0x200;
     static const int REG_COUNT = 16;
     static const int STACK_SZ = 16;
@@ -73,6 +75,9 @@ public:
 
     void print_regs() const;
 
+    void start();
+
+    void kill();
 private:
     typedef uint16_t inst_t;
 
@@ -80,6 +85,8 @@ private:
     Screen *screen;
     Keyboard *kbd;
     Speaker *speaker;
+
+    SDL_mutex *lock;
 
     uint8_t v[REG_COUNT];     // general-purpose registers
     uint16_t reg_i;           // the address register
@@ -90,9 +97,17 @@ private:
 
     int breakpoint;           // if >= 0, this pauses execution for debugging
 
+    unsigned mpi; //Milliseconds Per Instruction
+
     bool key_irq_active;
     bool key_irq;
     int key_irq_which;
+
+    volatile bool is_running;
+    SDL_Thread *cpu_td;
+
+    void main_loop();
+    static int main_loop_static(void *data);
 
     static unsigned get_nibble_from_inst(inst_t inst, unsigned idx);
     static unsigned get_addr_from_inst(inst_t inst);

@@ -58,6 +58,9 @@ Cpu::Cpu(Memory *mem, Screen *screen, Keyboard *kbd, Speaker *speaker) {
     this->screen = screen;
     this->kbd = kbd;
     this->speaker = speaker;
+    this->lock = SDL_CreateMutex();
+    this->mpi = 1000 / DEFAULT_IPS;
+    this->is_running = true;
 
     set_breakpoint(-1);
 }
@@ -88,6 +91,77 @@ int Cpu::get_breakpoint() const {
 
 unsigned Cpu::get_pc() const {
     return pc;
+}
+
+void Cpu::start() {
+    cpu_td = SDL_CreateThread(main_loop_static, "cpu_thread", this);
+    if (!cpu_td)
+        throw InitError("Failed to launch CPU thread\n");
+}
+
+void Cpu::kill() {
+    is_running = false;
+    SDL_WaitThread(cpu_td, NULL);
+}
+
+int Cpu::main_loop_static(void *data) {
+    ((Cpu*)data)->main_loop();
+    return 0;
+}
+
+void Cpu::main_loop() {
+    unsigned cur_ticks, prev_ticks, delta_ticks;
+    unsigned last_int_tim_ticks;
+    unsigned accum_ticks = 0;
+
+    while (is_running) {
+        prev_ticks = cur_ticks;
+        cur_ticks = SDL_GetTicks();
+        delta_ticks = cur_ticks - prev_ticks;
+        accum_ticks += delta_ticks;
+
+        if ((cur_ticks - last_int_tim_ticks) >= (1000.0 / 60.0)) {
+            last_int_tim_ticks = cur_ticks;
+            int_tim();
+        }
+
+        while (accum_ticks >= mpi) {
+            if (next_inst()) {
+                char choice;
+                do {
+                    set_breakpoint(-1);
+
+                    std::cout << std::hex << get_pc() << std::endl;
+                    std::cout << "db> ";
+
+                    // XXX This blocks if the user tries to kill the game.
+                    std::cin >> choice;
+
+                    switch (choice) {
+                    case 'n':
+                        next_inst();
+                        break;
+                    case 'g':
+                        print_regs();
+                        break;
+                    default:
+                        break;
+                    }
+                } while (choice != 'c' && choice != 'q');
+            }
+
+            /*
+             * Don't let breakpoints accumulate too much frame time.
+             * This works by nuking it down so that delta_ticks will almost
+             * certainly be zero next frame, but there are bound to be
+             * inaccuracies when you suspend execution like this.  Some sort
+             * of virtual timing system may be possible, but it's not worth
+             * the effort on a CHIP-8 emulator's debugger.
+             */
+            cur_ticks = SDL_GetTicks();
+            accum_ticks -= mpi;
+        }
+    }
 }
 
 void Cpu::print_regs() const {
@@ -193,8 +267,6 @@ bool Cpu::next_inst(void) {
     opcode = decode_inst(inst);
     if (!opcode)
         throw BadOpcodeError();
-
-    // std::cout << std::hex << inst << ": " << opcode->pattern << std::endl;
 
     switch (opcode->arg_type) {
     case ARG_NONE:
